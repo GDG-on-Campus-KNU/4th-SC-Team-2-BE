@@ -117,19 +117,15 @@ public class JwtProvider {
     }
 
     public RefreshTokenResponse recreateAccessToken(String refreshToken) {
-        // 유저에게 등록된 리프레시 토큰인지 확인
+        // 1. 토큰 존재 여부 확인
         RefreshToken existsRefreshToken = refreshTokenRepository.findByToken(refreshToken)
-            .orElseThrow(
-                () -> new RefreshTokenException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
-        if (!existsRefreshToken.equals(refreshToken)) {
-            throw new RefreshTokenException(ErrorCode.REFRESH_TOKEN_INVALID);
-        }
-        // 만료된 리프레시 토큰인지 확인
+            .orElseThrow(() -> new RefreshTokenException(ErrorCode.REFRESH_TOKEN_NOT_FOUND));
+        // 2. 토큰 만료 여부 검사
         if (isRefreshTokenExpired(refreshToken)) {
             throw new RefreshTokenException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
-        // 해당 리프레시 토큰의 유저 정보를 통해 다시 엑세스 토큰 생성
-        String accessToken = createAccessToken(Long.valueOf(existsRefreshToken.getUser().getId()));
+        // 3. 새로운 Access Token 생성
+        String accessToken = createAccessToken(existsRefreshToken.getUser().getId());
         return new RefreshTokenResponse(accessToken);
     }
 
