@@ -11,6 +11,11 @@ public enum ErrorCode {
     // USER
     USER_DUPLICATED(HttpStatus.CONFLICT, "USER401", "이미 존재하는 유저입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER402", "존재하지 않는 유저입니다."),
+    USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "USER403", "유저의 권한이 없습니다."),
+
+    // EMOTION_LOG
+    EMOTION_NOT_FOUND(HttpStatus.NOT_FOUND, "EMOTION401", "감정 기록이 존재하지 않습니다."),
+
 
     // REFRESH_TOKEN
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "REFRESH401", "리프레시 토큰이 DB에 존재하지 않습니다."),
