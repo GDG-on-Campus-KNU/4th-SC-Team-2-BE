@@ -2,6 +2,7 @@ package com.example.soop.domain.emotion;
 
 import com.example.soop.domain.emotion.req.CreateEmotionLogRequest;
 import com.example.soop.domain.emotion.req.UpdateEmotionLogRequest;
+import com.example.soop.domain.emotion.res.DailyTopEmotionResponse;
 import com.example.soop.domain.emotion.res.DayEmotionLogResponse;
 import com.example.soop.domain.emotion.res.EmotionLogResponse;
 import com.example.soop.domain.user.User;
@@ -13,7 +14,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -109,4 +112,40 @@ public class EmotionLogService {
             .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
         return user;
     }
+
+    @Description("감정 기록 월별 조회 - 날짜별로 가장 많이 등록된 감정 이름 조회")
+    public List<DailyTopEmotionResponse> getMonthlyTopEmotionPerDay(Long userId, YearMonth yearMonth) {
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        User user = findUser(userId);
+
+        List<EmotionLog> logs = emotionLogRepository.findAllByUserAndRecordedAtBetween(
+            user,
+            startDate.atStartOfDay(),
+            endDate.atTime(LocalTime.MAX)
+        );
+
+        // 날짜별로 그룹 → 감정 이름으로 또 그룹 → 개수 세기 → 최빈 감정 찾기
+        return logs.stream()
+            .collect(Collectors.groupingBy(log -> log.getRecordedAt().toLocalDate()))
+            .entrySet().stream()
+            .map(entry -> {
+                LocalDate date = entry.getKey();
+                List<EmotionLog> logsOnDate = entry.getValue();
+
+                // 감정별로 개수 세기
+                String mostFrequentEmotion = logsOnDate.stream()
+                    .collect(Collectors.groupingBy(EmotionLog::getEmotionName, Collectors.counting()))
+                    .entrySet().stream()
+                    .max(Map.Entry.comparingByValue()) // 최빈 감정
+                    .map(Map.Entry::getKey)
+                    .orElse("NONE");
+
+                return new DailyTopEmotionResponse(date, mostFrequentEmotion);
+            })
+            .sorted(Comparator.comparing(DailyTopEmotionResponse::date))
+            .toList();
+    }
+
 }
