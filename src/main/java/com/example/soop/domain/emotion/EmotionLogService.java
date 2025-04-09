@@ -52,7 +52,7 @@ public class EmotionLogService {
     }
 
     public User findUser(Long userId) {
-        User user = userRepository.findByUserId(userId)
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
         return user;
     }
