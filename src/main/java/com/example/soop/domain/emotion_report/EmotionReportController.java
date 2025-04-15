@@ -3,6 +3,7 @@ package com.example.soop.domain.emotion_report;
 
 import com.example.soop.domain.emotion_report.res.EmotionReportResponse;
 import com.example.soop.domain.user.User;
+import com.example.soop.global.format.ApiResponse;
 import com.example.soop.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,37 +27,45 @@ public class EmotionReportController {
 
     @Operation(summary = "오늘 감정 분석 조회")
     @GetMapping("/daily")
-    public EmotionReportResponse getDailyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ApiResponse<EmotionReportResponse> getDailyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
         LocalDate today = LocalDate.now();
-        return emotionReportService.getReport(userDetails.getId(), today, today.plusDays(1));
+        EmotionReportResponse dailyReport = emotionReportService.getReport(userDetails.getId(), today,
+            today.plusDays(1));
+        return ApiResponse.createSuccessWithData(dailyReport, "오늘 감정 분석 조회에 성공했습니다.");
     }
 
     @Operation(summary = "이번 주 감정 분석 조회")
     @GetMapping("/weekly")
-    public EmotionReportResponse getWeeklyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ApiResponse<EmotionReportResponse> getWeeklyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
         LocalDate endOfWeek = today.with(DayOfWeek.SUNDAY).plusDays(1);
-        return emotionReportService.getReport(userDetails.getId(), startOfWeek, endOfWeek);
+        EmotionReportResponse weeklyReport = emotionReportService.getReport(userDetails.getId(),
+            startOfWeek, endOfWeek);
+        return ApiResponse.createSuccessWithData(weeklyReport, "이번 주 감정 분석 조회에 성공했습니다.");
     }
 
     @Operation(summary = "이번 달 감정 분석 조회")
     @GetMapping("/monthly")
-    public EmotionReportResponse getMonthlyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ApiResponse<EmotionReportResponse> getMonthlyReport(@AuthenticationPrincipal CustomUserDetails userDetails) {
         LocalDate today = LocalDate.now();
         LocalDate startOfMonth = today.withDayOfMonth(1);
         LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth()).plusDays(1);
-        return emotionReportService.getReport(userDetails.getId(), startOfMonth, endOfMonth);
+        EmotionReportResponse monthlyReport = emotionReportService.getReport(userDetails.getId(),
+            startOfMonth, endOfMonth);
+        return ApiResponse.createSuccessWithData(monthlyReport, "이번 달 감정 분석 조회에 성공했습니다.");
     }
 
     @Operation(summary = "기간 별 감정 분석 조회")
     @GetMapping
-    public EmotionReportResponse getReportByPeriod(
+    public ApiResponse<EmotionReportResponse> getReportByPeriod(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("startDate") LocalDate startDate,
         @RequestParam("endDate") LocalDate endDate
     ) {
         // endDate 포함을 위해 하루 뒤까지 조회
-        return emotionReportService.getReport(userDetails.getId(), startDate, endDate.plusDays(1));
+        EmotionReportResponse periodReport = emotionReportService.getReport(userDetails.getId(),
+            startDate, endDate.plusDays(1));
+        return ApiResponse.createSuccessWithData(periodReport, "기간 별 감정 분석 조회에 성공했습니다.");
     }
 }
