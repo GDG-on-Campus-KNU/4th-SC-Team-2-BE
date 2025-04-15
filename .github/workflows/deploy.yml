@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p src/main/resources
           echo '${{ secrets.APPLICATION_YML }}' > src/main/resources/application.yml
-          cat src/main/resources/application.yaml
+          cat src/main/resources/application.yml
         shell: bash
 
       - name: Grant execute permission for Gradle Wrapper
@@ -70,4 +70,8 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/soop:latest
             docker stop soop
             docker rm $(docker ps --filter 'status=exited' -a -q)
+<<<<<<< HEAD
             docker run -d --name soop --log-driver=syslog --network soop -p 8082:8080 --label co.elastic.logs/enabled=true --label co.elastic.logs/module=java ${{ secrets.DOCKER_USERNAME }}/soop:latest
+=======
+            docker run -d --name soop --log-driver=syslog --network soop -p 8081:8080 --label co.elastic.logs/enabled=true --label co.elastic.logs/module=java ${{ secrets.DOCKER_USERNAME }}/soop:latest
+>>>>>>> 949f808742bb5190989f28346191495564b89a7e
