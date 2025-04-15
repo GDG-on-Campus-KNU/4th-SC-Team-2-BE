@@ -1,9 +1,9 @@
-package com.example.soop.domain.emotion.req;
+package com.example.soop.domain.emotion_log.req;
 
-import com.example.soop.domain.emotion.EmotionGroup;
+import com.example.soop.domain.emotion_log.EmotionGroup;
 import java.time.LocalDateTime;
 
-public record CreateEmotionLogRequest(
+public record UpdateEmotionLogRequest(
     String emotionName,
     EmotionGroup emotionGroup,
     String content,

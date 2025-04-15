@@ -33,7 +33,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             "/api/v1/users/signup",
             "/api/v1/users/login",
             "/api/v1/users/refresh",
-            "/api/v1/emotion-logs",
             "/h2-console",
             "/swagger-ui", "/swagger-resource", "/v3/api-docs",
             "/ws/chat"

@@ -1,4 +1,4 @@
-package com.example.soop.domain.emotion;
+package com.example.soop.domain.emotion_log;
 
 public enum EmotionGroup {
     POSITIVE,

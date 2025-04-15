@@ -1,4 +1,4 @@
-package com.example.soop.domain.emotion;
+package com.example.soop.domain.emotion_log;
 
 import com.example.soop.domain.user.User;
 import com.example.soop.global.entity.JpaBaseEntity;
