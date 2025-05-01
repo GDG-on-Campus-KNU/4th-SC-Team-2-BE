@@ -60,7 +60,7 @@ public class EmotionReportController {
         return ApiResponse.createSuccessWithData(monthlyReport, "이번 달 감정 분석 조회에 성공했습니다.");
     }
 
-    @Operation(summary = "기간 별 감정 분석 조회")
+    @Operation(summary = "기간별 감정 분석 조회")
     @GetMapping
     public ApiResponse<EmotionReportResponse> getReportByPeriod(
         @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -73,6 +73,7 @@ public class EmotionReportController {
         return ApiResponse.createSuccessWithData(periodReport, "기간별 감정 통계 조회에 성공했습니다.");
     }
 
+    @Operation(summary = "기간별 AI 트리거 및 전략 조회")
     @GetMapping("/ai-feedback")
     public ApiResponse<AiTriggersAndFeedbackResult> getAiFeedback(
         @AuthenticationPrincipal CustomUserDetails userDetails,
