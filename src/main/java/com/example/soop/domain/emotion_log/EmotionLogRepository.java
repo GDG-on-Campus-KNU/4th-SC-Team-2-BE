@@ -14,4 +14,8 @@ public interface EmotionLogRepository extends JpaRepository<EmotionLog, Long> {
     List<EmotionLog> findAllByUserAndRecordedAtBetween(User user, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     List<EmotionLog> findAllByUserAndRecordedAtGreaterThanEqualAndRecordedAtLessThan(User user, LocalDateTime start, LocalDateTime end);
+
+    List<EmotionLog> findByRecordedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    List<EmotionLog> findByUserAndRecordedAtBetween(User user, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

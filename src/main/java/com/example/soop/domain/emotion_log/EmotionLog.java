@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class EmotionLog extends JpaBaseEntity {
+public class EmotionLog {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

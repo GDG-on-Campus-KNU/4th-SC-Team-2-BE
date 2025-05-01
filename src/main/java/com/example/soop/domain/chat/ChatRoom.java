@@ -2,13 +2,13 @@ package com.example.soop.domain.chat;
 
 import com.example.soop.global.entity.MongoBaseEntity;
 import jakarta.persistence.Id;
-import java.time.LocalDateTime;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Document(collection = "chat_rooms")
 public class ChatRoom extends MongoBaseEntity {
+
     @Id
     private String id;
     private String botId;

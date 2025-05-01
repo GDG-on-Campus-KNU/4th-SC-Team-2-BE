@@ -22,7 +22,7 @@ public class ChatRoomController {
     public ApiResponse<ChatRoomResponse> getOrCreateRoom(
         @RequestParam String botId,
         @AuthenticationPrincipal CustomUserDetails userDetails
-        ) {
+    ) {
         String userId = userDetails.getId().toString();
         String first = userId.compareTo(botId) < 0 ? userId : botId;
         String second = userId.compareTo(botId) < 0 ? botId : userId;
@@ -32,7 +32,7 @@ public class ChatRoomController {
             return ApiResponse.createSuccessWithData(ChatRoomResponse.fromEntity(chatRoom.get()),
                 "기존 채팅방 정보가 반환되었습니다");
         }
-        ChatRoom savedChatRoom = chatRoomRepository.save(new ChatRoom(first ,second));
+        ChatRoom savedChatRoom = chatRoomRepository.save(new ChatRoom(first, second));
         return ApiResponse.createSuccessWithData(ChatRoomResponse.fromEntity(savedChatRoom),
             "새로운 채팅방이 생성되어 해당 정보가 반환되었습니다.");
     }

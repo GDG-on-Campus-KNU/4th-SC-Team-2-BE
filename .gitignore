@@ -39,3 +39,9 @@ out/
 ### properties, yml
 application.properties
 application.yml
+
+#
+caches/
+daemon/
+native/
+wrapper/
