@@ -13,6 +13,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,6 @@ public class EmotionReportService {
 
     @Value("${gemini.api-key}")
     private String geminiApiKey;
-
-    String GEMINI_API_URL = geminiApiUrlBase + "?key=" + geminiApiKey;
 
     @Description("일별 분석 보고서 조회")
     public EmotionReportResponse getDailyReport(Long userId, LocalDate date) {
@@ -138,28 +137,69 @@ public class EmotionReportService {
         return user;
     }
 
-    public Map<EmotionGroup, List<TriggerResult>> printTop3TriggersByPeriod(Long userId,
-        LocalDate startDate, LocalDate endDate) {
+    public AiFeedbackResult generateTriggersAndStrategies(Long userId, LocalDate startDate,
+        LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId).orElseThrow();
         List<EmotionLog> logs = emotionLogRepository.findByUserAndRecordedAtBetween(user,
             startDateTime, endDateTime);
 
         if (logs.isEmpty()) {
             System.out.println("⚠️ 해당 기간에 EmotionLog 데이터가 없습니다.");
-            return null;
+            return new AiFeedbackResult(
+                List.of(),  // positiveTriggers
+                List.of(),  // negativeTriggers
+                List.of(),  // positiveStrategies
+                List.of()   // negativeStrategies
+            );
         }
+
 
         List<String> contents = logs.stream().map(EmotionLog::getContent).toList();
 
         StringBuilder prompt = new StringBuilder("""
-            For each description, return its corresponding trigger in the following format:
+            For each description below:
+            1. Extract a trigger as the situation or action (NOT the emotion felt).
+            - The trigger should describe **the event or action that caused the emotion**.
+            - Keep the trigger between 15 and 30 characters.
+            - Include key subjects or actions (e.g., "Fight with friend", "Boss praise", "Package lost").
+            - Avoid general emotional labels like "Anger", "Happiness", "Disappointment".
+                        
+            Then:
+            - Group similar triggers if they refer to the same situation or action (but DO NOT overgeneralize).
+            - Classify each trigger as POSITIVE or NEGATIVE based on the emotion it caused.
+            - Count how many times each trigger appeared per group.
+            - Return ONLY the TOP 3 triggers per group based on frequency.
 
-            <number>. Trigger: <trigger_name> (trigger_name should be a short phrase, no more than 30 characters)
+            Finally:
+            For each group (POSITIVE and NEGATIVE):
+            - Suggest exactly 3 actionable strategies to strengthen positive triggers or mitigate negative triggers.
+
+            Return result in this format (NO MORE THAN 3 TRIGGERS per group):
+
+            Positive Triggers:
+            1. <trigger> → <count>
+            2. <trigger> → <count>
+            3. <trigger> → <count>
+
+            Positive Strategies:
+            - <strategy 1>
+            - <strategy 2>
+            - <strategy 3>
+
+            Negative Triggers:
+            1. <trigger> → <count>
+            2. <trigger> → <count>
+            3. <trigger> → <count>
+
+            Negative Strategies:
+            - <strategy 1>
+            - <strategy 2>
+            - <strategy 3>
 
             Descriptions:
-        """);
+            """);
 
         for (int i = 0; i < contents.size(); i++) {
             prompt.append(String.format("%d. \"%s\"\n", i + 1, contents.get(i)));
@@ -178,71 +218,83 @@ public class EmotionReportService {
         );
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<Map> responseEntity = restTemplate.postForEntity(GEMINI_API_URL, requestEntity, Map.class);
+        String geminiApiUrl = geminiApiUrlBase + "?key=" + geminiApiKey;
+        ResponseEntity<Map> responseEntity = restTemplate.postForEntity(geminiApiUrl, requestEntity,
+            Map.class);
 
         Map<String, Object> responseBody = responseEntity.getBody();
         if (responseBody == null) {
-            throw new RuntimeException("Gemini 응답이 비어있습니다.");
+            throw new RuntimeException("Gemini 응답 비어있음");
         }
-
-        List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get("candidates");
+        List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get(
+            "candidates");
         if (candidates == null || candidates.isEmpty()) {
-            throw new RuntimeException("Gemini 응답에 candidates가 없습니다.");
+            throw new RuntimeException("Gemini 응답에 candidates 없음");
         }
-
         Map<String, Object> contentMap = (Map<String, Object>) candidates.get(0).get("content");
         List<Map<String, Object>> parts = (List<Map<String, Object>>) contentMap.get("parts");
-
         String responseText = (String) parts.get(0).get("text");
+
         System.out.println("📝 Gemini 응답:\n" + responseText);
 
-        // emotionGroup별 trigger count (POSITIVE, NEGATIVE만)
-        Map<EmotionGroup, Map<String, Integer>> triggerCounts = new HashMap<>();
-        triggerCounts.put(EmotionGroup.POSITIVE, new HashMap<>());
-        triggerCounts.put(EmotionGroup.NEGATIVE, new HashMap<>());
+        Map<EmotionGroup, List<TriggerResult>> triggerMap = new HashMap<>();
+        Map<EmotionGroup, List<String>> strategyMap = new HashMap<>();
+        triggerMap.put(EmotionGroup.POSITIVE, new ArrayList<>());
+        triggerMap.put(EmotionGroup.NEGATIVE, new ArrayList<>());
+        strategyMap.put(EmotionGroup.POSITIVE, new ArrayList<>());
+        strategyMap.put(EmotionGroup.NEGATIVE, new ArrayList<>());
+
+        EmotionGroup currentGroup = null;
+        boolean readingTriggers = false;
+        boolean readingStrategies = false;
 
         for (String line : responseText.split("\n")) {
-            if (line.contains("Trigger:")) {
-                try {
-                    String[] partsLine = line.split("Trigger:");
-                    int index = Integer.parseInt(partsLine[0].replace(".", "").trim()) - 1;
-                    String trigger = partsLine[1].trim();
-
-                    EmotionGroup group = logs.get(index).getEmotionGroup();
-
-                    if (group == EmotionGroup.POSITIVE || group == EmotionGroup.NEGATIVE) {
-                        triggerCounts.get(group).merge(trigger, 1, Integer::sum);
-                    }
-                    // else 무시
-                } catch (Exception e) {
-                    System.out.println("⚠️ 응답 파싱 오류: " + line);
-                }
+            line = line.trim();
+            if (line.startsWith("Positive Triggers:")) {
+                currentGroup = EmotionGroup.POSITIVE;
+                readingTriggers = true;
+                readingStrategies = false;
+            } else if (line.startsWith("Positive Strategies:")) {
+                currentGroup = EmotionGroup.POSITIVE;
+                readingTriggers = false;
+                readingStrategies = true;
+            } else if (line.startsWith("Negative Triggers:")) {
+                currentGroup = EmotionGroup.NEGATIVE;
+                readingTriggers = true;
+                readingStrategies = false;
+            } else if (line.startsWith("Negative Strategies:")) {
+                currentGroup = EmotionGroup.NEGATIVE;
+                readingTriggers = false;
+                readingStrategies = true;
+            } else if (readingTriggers && line.matches("^\\d+\\.\\s+.*→\\s*\\d+")) {
+                String[] partsLine = line.split("→");
+                String trigger = partsLine[0].replaceAll("^\\d+\\.\\s+", "").trim();
+                int count = Integer.parseInt(partsLine[1].trim());
+                triggerMap.get(currentGroup).add(new TriggerResult(trigger, count));
+            } else if (readingStrategies && line.startsWith("-")) {
+                String strategy = line.substring(1).trim();
+                strategyMap.get(currentGroup).add(strategy);
             }
         }
 
-        // 각 그룹별 상위 3개 추출 (POSITIVE, NEGATIVE만)
-        Map<EmotionGroup, List<TriggerResult>> result = new HashMap<>();
+        return new AiFeedbackResult(
+            triggerMap.getOrDefault(EmotionGroup.POSITIVE, List.of()),
+            triggerMap.getOrDefault(EmotionGroup.NEGATIVE, List.of()),
+            strategyMap.getOrDefault(EmotionGroup.POSITIVE, List.of()),
+            strategyMap.getOrDefault(EmotionGroup.NEGATIVE, List.of())
+        );
 
-        for (EmotionGroup group : List.of(EmotionGroup.POSITIVE, EmotionGroup.NEGATIVE)) {
-            List<TriggerResult> top3 = triggerCounts.get(group).entrySet().stream()
-                .sorted((a, b) -> b.getValue() - a.getValue())
-                .limit(3)
-                .map(e -> new TriggerResult(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
-            result.put(group, top3);
-        }
-
-        result.forEach((group, list) -> {
-            System.out.println("상위 3개 트리거 [" + group + "]:");
-            list.forEach(tr -> System.out.printf("%s %d회\n", tr.trigger(), tr.count()));
-        });
-
-        return result;
     }
+
     public record TriggerResult(String trigger, int count) {
 
     }
 
+    public record AiFeedbackResult(
+        List<TriggerResult> positiveTriggers,
+        List<TriggerResult> negativeTriggers,
+        List<String> positiveStrategies,
+        List<String> negativeStrategies
+    ) {}
 
 }

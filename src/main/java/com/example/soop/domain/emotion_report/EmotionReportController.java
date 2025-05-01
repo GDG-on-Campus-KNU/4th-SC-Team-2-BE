@@ -2,6 +2,7 @@ package com.example.soop.domain.emotion_report;
 
 
 import com.example.soop.domain.emotion_log.EmotionGroup;
+import com.example.soop.domain.emotion_report.EmotionReportService.AiFeedbackResult;
 import com.example.soop.domain.emotion_report.EmotionReportService.TriggerResult;
 import com.example.soop.domain.emotion_report.res.EmotionReportResponse;
 import com.example.soop.global.format.ApiResponse;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,15 +73,14 @@ public class EmotionReportController {
         return ApiResponse.createSuccessWithData(periodReport, "기간 별 감정 분석 조회에 성공했습니다.");
     }
 
-    @Operation(summary = "특정 기간 내 상위 3개 긍정, 부정 트리거 반환")
-    @GetMapping("/top3")
-    public Map<EmotionGroup, List<TriggerResult>> getTop3Triggers(
+    @GetMapping("/ai-feedback")
+    public AiFeedbackResult getAiFeedback(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestParam("startDate") LocalDate startDate,
-        @RequestParam("endDate") LocalDate endDate
-    ) {
-        Map<EmotionGroup, List<TriggerResult>> emotionGroupListMap = emotionReportService.printTop3TriggersByPeriod(
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        AiFeedbackResult aiFeedbackResult = emotionReportService.generateTriggersAndStrategies(
             userDetails.getId(), startDate, endDate);
-        return emotionGroupListMap;
+        return aiFeedbackResult;
     }
+
 }
