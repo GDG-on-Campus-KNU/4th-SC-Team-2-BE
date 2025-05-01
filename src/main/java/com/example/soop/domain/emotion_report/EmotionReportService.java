@@ -4,7 +4,6 @@ import com.example.soop.domain.emotion_log.EmotionGroup;
 import com.example.soop.domain.emotion_log.EmotionLog;
 import com.example.soop.domain.emotion_log.EmotionLogRepository;
 import com.example.soop.domain.emotion_report.res.EmotionReportResponse;
-import com.example.soop.domain.emotion_report.res.EmotionReportResponse.TriggerStat;
 import com.example.soop.domain.user.User;
 import com.example.soop.domain.user.UserRepository;
 import com.example.soop.global.code.ErrorCode;
@@ -14,11 +13,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import jdk.jfr.Description;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +24,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+@EnableRetry
 @Service
 @RequiredArgsConstructor
 public class EmotionReportService {
@@ -62,7 +63,7 @@ public class EmotionReportService {
         return getReport(userId, start, end);
     }
 
-    @Description("기간별 보고서 생성 조회")
+    @Description("기간별 감정 통계 조회")
     public EmotionReportResponse getReport(Long userId, LocalDate startDate, LocalDate endDate) {
         User user = findUser(userId);
         List<EmotionLog> logs = emotionLogRepository.findAllByUserAndRecordedAtGreaterThanEqualAndRecordedAtLessThan(
@@ -89,10 +90,6 @@ public class EmotionReportService {
         // 가장 적게 등장한 감정의 비율
         int leastFreqPercent = (int) (100 * emotionCounts.getOrDefault(leastFrequentEmotion, 0L)
             / (double) Math.max(total, 1));
-        // 긍정/중립/부정 감정에 대해 트리거 추출 (상위 3개)
-        List<TriggerStat> positiveTriggerStats = extractTriggers(logs, EmotionGroup.POSITIVE);
-        List<TriggerStat> neutralTriggerStats = extractTriggers(logs, EmotionGroup.NEUTRAL);
-        List<TriggerStat> negativeTriggerStats = extractTriggers(logs, EmotionGroup.NEGATIVE);
         // 최종 응답 생성
         return new EmotionReportResponse(
             total,
@@ -110,115 +107,107 @@ public class EmotionReportService {
             mostFrequentEmotion,
             mostFreqPercent,
             leastFrequentEmotion,
-            leastFreqPercent,
-            positiveTriggerStats,
-            negativeTriggerStats
+            leastFreqPercent
         );
     }
 
+    @Description("긍정, 부정 트리거 및 전략 추출")
+    public AiTriggersAndFeedbackResult generateTriggersAndStrategies(Long userId,
+        LocalDate startDate, LocalDate endDate) {
+        List<String> contents = loadEmotionContents(userId, startDate, endDate);
+        if (contents.isEmpty()) {
+            return emptyResult();
+        }
 
-    private List<TriggerStat> extractTriggers(List<EmotionLog> logs, EmotionGroup group) {
-        Map<String, Long> triggers = logs.stream()
-            .filter(log -> log.getEmotionGroup() == group)
-            .map(EmotionLog::getContent)
-            .flatMap(content -> Arrays.stream(content.split("[ ,.]")))
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        return triggers.entrySet().stream()
-            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-            .limit(3)
-            .map(e -> new TriggerStat(e.getKey(), e.getValue().intValue()))
-            .toList();
+        String prompt = buildPrompt(contents);
+        String responseText = callGeminiApi(prompt);
+        return parseGeminiResponse(responseText);
     }
 
-    public User findUser(Long userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
-        return user;
-    }
-
-    public AiFeedbackResult generateTriggersAndStrategies(Long userId, LocalDate startDate,
-        LocalDate endDate) {
+    /**
+     * 기간 내 해당 유저의 감정 로그 조회
+     */
+    private List<String> loadEmotionContents(Long userId, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
         User user = userRepository.findById(userId).orElseThrow();
         List<EmotionLog> logs = emotionLogRepository.findByUserAndRecordedAtBetween(user,
             startDateTime, endDateTime);
+        return logs.stream().map(EmotionLog::getContent).toList();
+    }
 
-        if (logs.isEmpty()) {
-            System.out.println("⚠️ 해당 기간에 EmotionLog 데이터가 없습니다.");
-            return new AiFeedbackResult(
-                List.of(),  // positiveTriggers
-                List.of(),  // negativeTriggers
-                List.of(),  // positiveStrategies
-                List.of()   // negativeStrategies
-            );
-        }
-
-
-        List<String> contents = logs.stream().map(EmotionLog::getContent).toList();
-
+    /**
+     * 트리거 및 전략 추출 프롬프트
+     */
+    private String buildPrompt(List<String> contents) {
         StringBuilder prompt = new StringBuilder("""
-            For each description below:
-            1. Extract a trigger as the situation or action (NOT the emotion felt).
-            - The trigger should describe **the event or action that caused the emotion**.
-            - Keep the trigger between 15 and 30 characters.
-            - Include key subjects or actions (e.g., "Fight with friend", "Boss praise", "Package lost").
-            - Avoid general emotional labels like "Anger", "Happiness", "Disappointment".
-                        
-            Then:
-            - Group similar triggers if they refer to the same situation or action (but DO NOT overgeneralize).
-            - Classify each trigger as POSITIVE or NEGATIVE based on the emotion it caused.
-            - Count how many times each trigger appeared per group.
-            - Return ONLY the TOP 3 triggers per group based on frequency.
+                For each description below:
+                1. Extract a trigger as the situation or action (NOT the emotion felt).
+                - The trigger should describe **the event or action that caused the emotion**.
+                - Keep the trigger between 15 and 30 characters.
+                - Include key subjects or actions (e.g., "Fight with friend", "Boss praise", "Package lost").
+                - Avoid general emotional labels like "Anger", "Happiness", "Disappointment".
 
-            Finally:
-            For each group (POSITIVE and NEGATIVE):
-            - Suggest exactly 3 actionable strategies to strengthen positive triggers or mitigate negative triggers.
+                Then:
+                - Group similar triggers if they refer to the same situation or action (but DO NOT overgeneralize).
+                - Classify each trigger as POSITIVE or NEGATIVE based on the emotion it caused.
+                - Count how many times each trigger appeared per group.
+                - Return ONLY the TOP 3 triggers per group based on frequency.
 
-            Return result in this format (NO MORE THAN 3 TRIGGERS per group):
+                Finally:
+                For each group (POSITIVE and NEGATIVE):
+                - Suggest exactly 3 actionable strategies to strengthen positive triggers or mitigate negative triggers.
 
-            Positive Triggers:
-            1. <trigger> → <count>
-            2. <trigger> → <count>
-            3. <trigger> → <count>
+                Return result in this format (NO MORE THAN 3 TRIGGERS per group):
 
-            Positive Strategies:
-            - <strategy 1>
-            - <strategy 2>
-            - <strategy 3>
+                Positive Triggers:
+                1. <trigger> → <count>
+                2. <trigger> → <count>
+                3. <trigger> → <count>
 
-            Negative Triggers:
-            1. <trigger> → <count>
-            2. <trigger> → <count>
-            3. <trigger> → <count>
+                Positive Strategies:
+                - <strategy 1>
+                - <strategy 2>
+                - <strategy 3>
 
-            Negative Strategies:
-            - <strategy 1>
-            - <strategy 2>
-            - <strategy 3>
+                Negative Triggers:
+                1. <trigger> → <count>
+                2. <trigger> → <count>
+                3. <trigger> → <count>
 
-            Descriptions:
+                Negative Strategies:
+                - <strategy 1>
+                - <strategy 2>
+                - <strategy 3>
+
+                Descriptions:
             """);
 
         for (int i = 0; i < contents.size(); i++) {
             prompt.append(String.format("%d. \"%s\"\n", i + 1, contents.get(i)));
         }
+        return prompt.toString();
+    }
 
-        // Gemini API 요청
+    /**
+     * Gemini API 호출
+     */
+    @Retryable(
+        value = RuntimeException.class,
+        maxAttempts = 2,
+        backoff = @Backoff(delay = 1000, multiplier = 2)
+    )
+    private String callGeminiApi(String prompt) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, Object> requestBody = Map.of(
-            "contents", List.of(
-                Map.of("parts", List.of(
-                    Map.of("text", prompt.toString())
-                ))
-            )
+            "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt))))
         );
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
         String geminiApiUrl = geminiApiUrlBase + "?key=" + geminiApiKey;
+
         ResponseEntity<Map> responseEntity = restTemplate.postForEntity(geminiApiUrl, requestEntity,
             Map.class);
 
@@ -226,17 +215,22 @@ public class EmotionReportService {
         if (responseBody == null) {
             throw new RuntimeException("Gemini 응답 비어있음");
         }
+
         List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get(
             "candidates");
         if (candidates == null || candidates.isEmpty()) {
             throw new RuntimeException("Gemini 응답에 candidates 없음");
         }
+
         Map<String, Object> contentMap = (Map<String, Object>) candidates.get(0).get("content");
         List<Map<String, Object>> parts = (List<Map<String, Object>>) contentMap.get("parts");
-        String responseText = (String) parts.get(0).get("text");
+        return (String) parts.get(0).get("text");
+    }
 
-        System.out.println("📝 Gemini 응답:\n" + responseText);
-
+    /**
+     * Gemini 응답  파싱
+     */
+    private AiTriggersAndFeedbackResult parseGeminiResponse(String responseText) {
         Map<EmotionGroup, List<TriggerResult>> triggerMap = new HashMap<>();
         Map<EmotionGroup, List<String>> strategyMap = new HashMap<>();
         triggerMap.put(EmotionGroup.POSITIVE, new ArrayList<>());
@@ -277,24 +271,34 @@ public class EmotionReportService {
             }
         }
 
-        return new AiFeedbackResult(
+        return new AiTriggersAndFeedbackResult(
             triggerMap.getOrDefault(EmotionGroup.POSITIVE, List.of()),
             triggerMap.getOrDefault(EmotionGroup.NEGATIVE, List.of()),
             strategyMap.getOrDefault(EmotionGroup.POSITIVE, List.of()),
             strategyMap.getOrDefault(EmotionGroup.NEGATIVE, List.of())
         );
+    }
 
+    private AiTriggersAndFeedbackResult emptyResult() {
+        return new AiTriggersAndFeedbackResult(List.of(), List.of(), List.of(), List.of());
     }
 
     public record TriggerResult(String trigger, int count) {
 
     }
 
-    public record AiFeedbackResult(
+    public record AiTriggersAndFeedbackResult(
         List<TriggerResult> positiveTriggers,
         List<TriggerResult> negativeTriggers,
         List<String> positiveStrategies,
         List<String> negativeStrategies
-    ) {}
+    ) {
 
+    }
+
+    public User findUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+        return user;
+    }
 }

@@ -6,4 +6,5 @@ public record DailyTopEmotionResponse(
     LocalDate date,
     String topEmotionName
 ) {
+
 }

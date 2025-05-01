@@ -2,7 +2,7 @@ package com.example.soop.domain.emotion_log.res;
 
 import com.example.soop.domain.emotion_log.EmotionGroup;
 import com.example.soop.domain.emotion_log.EmotionLog;
-    import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 
 public record EmotionLogResponse(
     String emotionName,

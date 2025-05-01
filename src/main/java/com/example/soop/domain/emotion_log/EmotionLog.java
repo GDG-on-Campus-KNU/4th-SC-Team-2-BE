@@ -1,7 +1,6 @@
 package com.example.soop.domain.emotion_log;
 
 import com.example.soop.domain.user.User;
-import com.example.soop.global.entity.JpaBaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -18,7 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EmotionLog {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false)
@@ -33,7 +33,8 @@ public class EmotionLog {
 
     private LocalDateTime recordedAt = LocalDateTime.now();
 
-    public EmotionLog(User user, String emotionName, EmotionGroup emotionGroup, String content,  LocalDateTime recordedAt) {
+    public EmotionLog(User user, String emotionName, EmotionGroup emotionGroup, String content,
+        LocalDateTime recordedAt) {
         this.user = user;
         this.emotionName = emotionName;
         this.emotionGroup = emotionGroup;

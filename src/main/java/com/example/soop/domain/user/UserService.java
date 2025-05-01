@@ -19,13 +19,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+
     @Transactional
     public void signup(SignupRequest request) {
-        if(userRepository.existsByProviderIdAndEmail(request.providerId(), request.email())){
+        if (userRepository.existsByProviderIdAndEmail(request.providerId(), request.email())) {
             throw new UserException(ErrorCode.USER_DUPLICATED);
         }
         userRepository.save(new User(request.providerId(), request.email(), request.nickname()));
     }
+
     @Transactional
     public TokenResponse login(LoginRequest request) {
         User user = userRepository.findByProviderIdAndEmail(request.providerId(), request.email())
@@ -37,7 +39,8 @@ public class UserService {
         refreshTokenRepository.findByUser(user)
             .ifPresentOrElse(
                 token -> token.update(refreshToken), // 존재 O -> 업데이트
-                () -> refreshTokenRepository.save(new RefreshToken(user, refreshToken)) // 존재 X -> 생성
+                () -> refreshTokenRepository.save(new RefreshToken(user, refreshToken))
+                // 존재 X -> 생성
             );
 
         return new TokenResponse(accessToken, refreshToken);

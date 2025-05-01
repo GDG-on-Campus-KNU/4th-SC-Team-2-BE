@@ -40,7 +40,7 @@ public class UserController {
     })
     public ApiResponse<TokenResponse> signup(@RequestBody LoginRequest request) {
         TokenResponse tokenResponse = userService.login(request);
-        return ApiResponse.createSuccessWithData(tokenResponse,"로그인에 성공했습니다.");
+        return ApiResponse.createSuccessWithData(tokenResponse, "로그인에 성공했습니다.");
     }
 
     @PostMapping("/refresh")

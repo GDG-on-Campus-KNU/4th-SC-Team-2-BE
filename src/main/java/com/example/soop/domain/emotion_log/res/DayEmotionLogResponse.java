@@ -6,4 +6,6 @@ import java.util.List;
 public record DayEmotionLogResponse(
     DayOfWeek dayOfWeek,
     List<EmotionLogResponse> emotions
-) {}
+) {
+
+}

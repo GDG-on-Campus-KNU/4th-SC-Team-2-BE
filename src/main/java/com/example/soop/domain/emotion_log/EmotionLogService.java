@@ -92,7 +92,8 @@ public class EmotionLogService {
         LocalDateTime endDateTime = end.atTime(LocalTime.MAX);
 
         User user = findUser(userId);
-        List<EmotionLog> logs = emotionLogRepository.findAllByUserAndRecordedAtBetween(user, startDateTime, endDateTime);
+        List<EmotionLog> logs = emotionLogRepository.findAllByUserAndRecordedAtBetween(user,
+            startDateTime, endDateTime);
 
         // 요일별로 그룹화
         Map<DayOfWeek, List<EmotionLogResponse>> grouped = logs.stream()
@@ -114,7 +115,8 @@ public class EmotionLogService {
     }
 
     @Description("감정 기록 월별 조회 - 날짜별로 가장 많이 등록된 감정 이름 조회")
-    public List<DailyTopEmotionResponse> getMonthlyTopEmotionPerDay(Long userId, YearMonth yearMonth) {
+    public List<DailyTopEmotionResponse> getMonthlyTopEmotionPerDay(Long userId,
+        YearMonth yearMonth) {
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
@@ -136,7 +138,8 @@ public class EmotionLogService {
 
                 // 감정별로 개수 세기
                 String mostFrequentEmotion = logsOnDate.stream()
-                    .collect(Collectors.groupingBy(EmotionLog::getEmotionName, Collectors.counting()))
+                    .collect(
+                        Collectors.groupingBy(EmotionLog::getEmotionName, Collectors.counting()))
                     .entrySet().stream()
                     .max(Map.Entry.comparingByValue()) // 최빈 감정
                     .map(Map.Entry::getKey)
