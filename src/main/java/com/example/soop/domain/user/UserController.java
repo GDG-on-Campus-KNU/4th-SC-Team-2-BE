@@ -37,19 +37,24 @@ public class UserController {
     private final UserService userService;
     private final JwtProvider jwtProvider;
 
-    @Operation(summary = "회원 가입")
-    @PostMapping("/signup")
+    @Operation(summary = "전문가 회원 가입")
+    @PostMapping("/signup/expert")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "USER401", description = "이미 존재하는 유저입니다."),
     })
-    public ApiResponse<String> signup(@RequestBody BaseSignupRequest request) {
-        if (request instanceof ExpertSignupRequest expertRequest) {
-            userService.signupExpert(expertRequest);
-        }
-        if (request instanceof GeneralSignupRequest generalRequest) {
-            userService.signupGeneral(generalRequest);
-        }
-        return ApiResponse.createSuccess("회원 가입에 성공했습니다.");
+    public ApiResponse<String> signupExpert(@RequestBody ExpertSignupRequest request) {
+        userService.signupExpert(request);
+        return ApiResponse.createSuccess("전문가 회원가입에 성공했습니다.");
+    }
+
+    @Operation(summary = "일반 사용자 회원 가입")
+    @PostMapping("/signup/general")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "USER401", description = "이미 존재하는 유저입니다."),
+    })
+    public ApiResponse<String> signupGeneral(@RequestBody GeneralSignupRequest request) {
+        userService.signupGeneral(request);
+        return ApiResponse.createSuccess("일반 사용자 회원가입에 성공했습니다.");
     }
 
     @Operation(summary = "로그인")
@@ -107,8 +112,5 @@ public class UserController {
         ExpertUserResponse expertInfo = userService.getExpertInfo(expertId);
         return ApiResponse.createSuccessWithData(expertInfo, "전문가 정보 조회 성공");
     }
-
-
-
 
 }

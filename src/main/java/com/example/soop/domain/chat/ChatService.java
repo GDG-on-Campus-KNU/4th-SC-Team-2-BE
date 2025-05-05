@@ -14,6 +14,8 @@ import com.example.soop.domain.chat.entity.ChatRoomInfo;
 import com.example.soop.domain.chat.repository.ChatRoomInfoRepository;
 import com.example.soop.domain.chat.repository.ChatRoomRepository;
 import com.example.soop.domain.chat.repository.MemberShipRepository;
+import com.example.soop.domain.chat.type.EmpathyLevel;
+import com.example.soop.domain.chat.type.ToneLevel;
 import com.example.soop.domain.user.User;
 import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.global.code.ErrorCode;
@@ -287,6 +289,45 @@ public class ChatService {
     public List<Chat> getRecentChats(Long chatRoomId, int limit) {
         // MongoDB는 .getContent()가 필요 없음
         return chatRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, PageRequest.of(0, limit));
+    }
+
+    @Transactional
+    public void createDefaultChatRooms(User user) {
+        createChatBotRoom(user, "Empathica", "A chatbot that listens deeply and provides warm, empathetic responses to help you feel understood.",
+            EmpathyLevel.EMPATHETIC_CARING, ToneLevel.CALM_SOFT);
+
+        createChatBotRoom(user, "RationalMind", "A chatbot that gives logical, objective, and practical advice to help you solve problems.",
+            EmpathyLevel.COOL_RATIONAL, ToneLevel.DIRECT_HONEST);
+
+        createChatBotRoom(user, "MotivaBot", "A chatbot that encourages and motivates you with friendly, uplifting messages.",
+            EmpathyLevel.WARM_UNDERSTANDING, ToneLevel.CASUAL_FRIENDLY);
+    }
+
+    private void createChatBotRoom(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel) {
+        // 1. ChatRoom 생성
+        ChatRoom chatRoom = ChatRoom.builder()
+            .title(name)
+            .roomType(RoomType.USER_TO_BOT)
+            .status(RoomStatus.ENABLED)
+            .build();
+        chatRoomRepository.save(chatRoom);
+
+        // 2. ChatRoomInfo 생성 및 연결
+        ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
+            .chatRoom(chatRoom)
+            .name(name)
+            .description(description)
+            .empathyLevel(empathyLevel)
+            .tone(toneLevel)
+            .build();
+        chatRoomInfoRepository.save(chatRoomInfo);
+
+        // 3. Membership 추가 (본인이 멤버로 포함되도록)
+        Membership membership = Membership.builder()
+            .chatRoom(chatRoom)
+            .user(user)
+            .build();
+        memberShipRepository.save(membership);
     }
 
 }

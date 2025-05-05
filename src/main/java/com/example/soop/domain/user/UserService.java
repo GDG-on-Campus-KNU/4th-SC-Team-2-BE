@@ -1,5 +1,8 @@
 package com.example.soop.domain.user;
 
+import com.example.soop.domain.chat.ChatService;
+import com.example.soop.domain.chat.type.EmpathyLevel;
+import com.example.soop.domain.chat.type.ToneLevel;
 import com.example.soop.domain.user.repository.ExpertProfileRepository;
 import com.example.soop.domain.user.repository.RefreshTokenRepository;
 import com.example.soop.domain.user.repository.UserRepository;
@@ -30,6 +33,7 @@ public class UserService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ExpertProfileRepository expertProfileRepository;
+    private final ChatService chatService;
 
     @Transactional
     public void signupGeneral(GeneralSignupRequest request) {
@@ -38,7 +42,9 @@ public class UserService {
         }
         User user = new User(request.providerId(), request.email(), request.nickname(), UserType.USER);
         userRepository.save(user);
+        chatService.createDefaultChatRooms(user);
     }
+
     @Transactional
     public void signupExpert(ExpertSignupRequest request) {
         if (userRepository.existsByProviderIdAndEmail(request.providerId(), request.email())) {
