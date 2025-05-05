@@ -41,6 +41,18 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     /**
      * 룸 타입별 사용자 채팅방 목록 조회
      */
-    List<ChatRoom> findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(Long userId, RoomType roomType);
+    @Query(
+        "SELECT cr FROM ChatRoom cr " +
+            "JOIN cr.memberships m " +
+            "WHERE m.user.id = :userId " +
+            "AND cr.roomType = :roomType " +
+            "ORDER BY cr.messageUpdatedAt DESC"
+    )
+    List<ChatRoom> findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(
+        @Param("userId") Long userId,
+        @Param("roomType") RoomType roomType
+    );
+
+
 
 }
