@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -99,6 +100,15 @@ public class UserController {
         List<ExpertUserResponse> experts = userService.findExpertsByFilter(category, styles, language, minExperience);
         return ApiResponse.createSuccessWithData(experts, "전문가 목록 조회에 성공했습니다.");
     }
+
+    @Operation(summary = "전문가 정보 조회")
+    @GetMapping("/experts/{expertId}")
+    public ApiResponse<ExpertUserResponse> getExpertDetail(@PathVariable Long expertId) {
+        ExpertUserResponse expertInfo = userService.getExpertInfo(expertId);
+        return ApiResponse.createSuccessWithData(expertInfo, "전문가 정보 조회 성공");
+    }
+
+
 
 
 }

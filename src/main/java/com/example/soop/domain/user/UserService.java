@@ -90,4 +90,12 @@ public class UserService {
             .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
         return GeneralUserResponse.fromEntity(user);
     }
+
+    @Transactional
+    public ExpertUserResponse getExpertInfo(Long expertId) {
+        User user = userRepository.findById(expertId)
+            .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+        ExpertUserResponse expertUserResponse = ExpertUserResponse.fromEntity(user);
+        return expertUserResponse;
+    }
 }
