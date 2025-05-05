@@ -1,7 +1,7 @@
 package com.example.soop.global.jwt;
 
 import com.example.soop.domain.user.RefreshToken;
-import com.example.soop.domain.user.RefreshTokenRepository;
+import com.example.soop.domain.user.repository.RefreshTokenRepository;
 import com.example.soop.domain.user.res.RefreshTokenResponse;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.JwtAuthenticationException;

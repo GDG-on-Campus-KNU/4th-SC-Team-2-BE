@@ -15,7 +15,7 @@ import com.example.soop.domain.chat.repository.ChatRoomInfoRepository;
 import com.example.soop.domain.chat.repository.ChatRoomRepository;
 import com.example.soop.domain.chat.repository.MemberShipRepository;
 import com.example.soop.domain.user.User;
-import com.example.soop.domain.user.UserRepository;
+import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.UserException;
 import java.time.LocalDateTime;

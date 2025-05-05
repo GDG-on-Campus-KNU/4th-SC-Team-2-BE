@@ -5,7 +5,7 @@ import com.example.soop.domain.emotion_log.EmotionLog;
 import com.example.soop.domain.emotion_log.EmotionLogRepository;
 import com.example.soop.domain.emotion_report.res.EmotionReportResponse;
 import com.example.soop.domain.user.User;
-import com.example.soop.domain.user.UserRepository;
+import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.UserException;
 import java.time.DayOfWeek;

@@ -17,8 +17,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final JwtChannelInterceptor jwtChannelInterceptor;
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic"); // 구독 경로
-        registry.setApplicationDestinationPrefixes("/app"); // 메시지 발신 경로
+        registry.enableSimpleBroker("/sub"); // 구독 경로
+        registry.setApplicationDestinationPrefixes("/pub"); // 메시지 발신 경로
     }
 
     @Override

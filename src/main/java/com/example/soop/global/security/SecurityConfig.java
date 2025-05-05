@@ -36,7 +36,7 @@ public class SecurityConfig {
                             "/api/v1/users/**",
                             "/api/v1/emotion-logs/**",
                             "/api/v1/emotion-report/**",
-                            "/api/v1/chat/rooms/**",
+                            "/api/v1/chat/**",
                             "/ws/chat/**"
                         ).permitAll()
                         .anyRequest().authenticated()

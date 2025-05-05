@@ -1,7 +1,7 @@
 package com.example.soop.global.security;
 
 import com.example.soop.domain.user.User;
-import com.example.soop.domain.user.UserRepository;
+import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.JwtAuthenticationException;
 import lombok.RequiredArgsConstructor;

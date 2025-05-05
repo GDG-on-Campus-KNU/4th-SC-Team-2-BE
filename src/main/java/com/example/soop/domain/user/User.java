@@ -1,16 +1,23 @@
 package com.example.soop.domain.user;
 import com.example.soop.global.entity.JpaBaseEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Table(name = "users")
 @Entity
-@Data
 public class User extends JpaBaseEntity {
 
     @Id
@@ -29,17 +36,21 @@ public class User extends JpaBaseEntity {
     @Column(nullable = false, unique = true)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserType userType = UserType.USER;  // 기본값 일반 사용자
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ExpertProfile expertProfile;  // 전문가 정보 (없으면 일반 사용자)
+
     public User() {
 
     }
 
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public User(String providerId, String email, String nickname) {
+    public User(String providerId, String email, String nickname, UserType userType) {
         this.providerId = providerId;
         this.email = email;
         this.nickname = nickname;
+        this.userType = userType;
     }
 }

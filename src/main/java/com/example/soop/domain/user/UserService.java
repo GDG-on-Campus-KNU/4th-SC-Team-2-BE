@@ -1,7 +1,11 @@
 package com.example.soop.domain.user;
 
+import com.example.soop.domain.user.repository.ExpertProfileRepository;
+import com.example.soop.domain.user.repository.RefreshTokenRepository;
+import com.example.soop.domain.user.repository.UserRepository;
+import com.example.soop.domain.user.req.ExpertSignupRequest;
 import com.example.soop.domain.user.req.LoginRequest;
-import com.example.soop.domain.user.req.SignupRequest;
+import com.example.soop.domain.user.req.GeneralSignupRequest;
 import com.example.soop.domain.user.res.UserResponse;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.UserException;
@@ -20,13 +24,32 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ExpertProfileRepository expertProfileRepository;
 
     @Transactional
-    public void signup(SignupRequest request) {
+    public void signupGeneral(GeneralSignupRequest request) {
         if (userRepository.existsByProviderIdAndEmail(request.providerId(), request.email())) {
             throw new UserException(ErrorCode.USER_DUPLICATED);
         }
-        userRepository.save(new User(request.providerId(), request.email(), request.nickname()));
+        User user = new User(request.providerId(), request.email(), request.nickname(), UserType.USER);
+        userRepository.save(user);
+    }
+    @Transactional
+    public void signupExpert(ExpertSignupRequest request) {
+        if (userRepository.existsByProviderIdAndEmail(request.providerId(), request.email())) {
+            throw new UserException(ErrorCode.USER_DUPLICATED);
+        }
+        User user = new User(request.providerId(), request.email(), request.nickname(), UserType.EXPERT);
+        userRepository.save(user);
+
+        ExpertProfile profile = new ExpertProfile();
+        profile.setUser(user);
+        profile.setCategory(request.category());
+        profile.setExperience(request.experience());
+        profile.setStyle(request.style());
+        profile.setLanguage(request.language());
+        profile.setBio(request.bio());
+        expertProfileRepository.save(profile);
     }
 
     @Transactional

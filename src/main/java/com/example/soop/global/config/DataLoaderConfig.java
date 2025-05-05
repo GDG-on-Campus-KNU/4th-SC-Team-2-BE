@@ -4,7 +4,8 @@ import com.example.soop.domain.emotion_log.EmotionGroup;
 import com.example.soop.domain.emotion_log.EmotionLog;
 import com.example.soop.domain.emotion_log.EmotionLogRepository;
 import com.example.soop.domain.user.User;
-import com.example.soop.domain.user.UserRepository;
+import com.example.soop.domain.user.UserType;
+import com.example.soop.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class DataLoaderConfig {
     @Transactional
     public ApplicationRunner dataLoader(UserRepository userRepository, EmotionLogRepository emotionLogRepository) {
         return args -> {
-            User user = new User("google-sub-001", "user1@example.com", "유저1");
+            User user = new User("google-sub-001", "user1@example.com", "유저1", UserType.USER);
             userRepository.save(user);
 
             LocalDate monday = LocalDate.now().with(DayOfWeek.MONDAY);

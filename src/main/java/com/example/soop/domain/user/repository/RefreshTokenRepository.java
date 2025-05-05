@@ -1,5 +1,7 @@
-package com.example.soop.domain.user;
+package com.example.soop.domain.user.repository;
 
+import com.example.soop.domain.user.RefreshToken;
+import com.example.soop.domain.user.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

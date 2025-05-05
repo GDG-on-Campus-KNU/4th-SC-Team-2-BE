@@ -6,7 +6,7 @@ import com.example.soop.domain.emotion_log.res.DailyTopEmotionResponse;
 import com.example.soop.domain.emotion_log.res.DayEmotionLogResponse;
 import com.example.soop.domain.emotion_log.res.EmotionLogResponse;
 import com.example.soop.domain.user.User;
-import com.example.soop.domain.user.UserRepository;
+import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.EmotionLogException;
 import com.example.soop.global.exception.UserException;

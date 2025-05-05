@@ -1,7 +1,9 @@
 package com.example.soop.domain.user;
 
+import com.example.soop.domain.user.req.BaseSignupRequest;
+import com.example.soop.domain.user.req.ExpertSignupRequest;
 import com.example.soop.domain.user.req.LoginRequest;
-import com.example.soop.domain.user.req.SignupRequest;
+import com.example.soop.domain.user.req.GeneralSignupRequest;
 import com.example.soop.domain.user.res.RefreshTokenResponse;
 import com.example.soop.domain.user.res.UserResponse;
 import com.example.soop.global.format.ApiResponse;
@@ -32,8 +34,13 @@ public class UserController {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "USER401", description = "이미 존재하는 유저입니다."),
     })
-    public ApiResponse<String> signup(@RequestBody SignupRequest request) {
-        userService.signup(request);
+    public ApiResponse<String> signup(@RequestBody BaseSignupRequest request) {
+        if (request instanceof ExpertSignupRequest expertRequest) {
+            userService.signupExpert(expertRequest);
+        }
+        if (request instanceof GeneralSignupRequest generalRequest) {
+            userService.signupGeneral(generalRequest);
+        }
         return ApiResponse.createSuccess("회원 가입에 성공했습니다.");
     }
 
