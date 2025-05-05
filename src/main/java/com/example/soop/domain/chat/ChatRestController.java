@@ -1,6 +1,9 @@
 package com.example.soop.domain.chat;
 
 import com.example.soop.domain.chat.dto.req.ChatRoomIdRequest;
+import com.example.soop.domain.chat.dto.req.CreateAIChatRoomRequest;
+import com.example.soop.domain.chat.dto.res.AIChatRoomResponse;
+import com.example.soop.domain.chat.dto.res.AIChatRoomsResponse;
 import com.example.soop.domain.chat.dto.res.ChatContentResponse;
 import com.example.soop.domain.chat.dto.res.ChatContentsResponse;
 import com.example.soop.domain.chat.dto.res.ChatRoomIdResponse;
@@ -29,6 +32,40 @@ public class ChatRestController {
 
     private final ChatService chatService;
 
+    /**
+     * [사용자 ↔ 챗봇]
+     */
+    @Operation(summary = "AI 챗봇 채팅방 생성", description = "사용자가 정의한 AI 챗봇의 특징에 따라 채팅방을 생성합니다.")
+    @PostMapping("/rooms/ai")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<String> createAIChatRoom(
+        @Valid @RequestBody CreateAIChatRoomRequest createAIChatRoomRequest,
+        @AuthenticationPrincipal CustomUserDetails userDetail
+    ) {
+        chatService.createAIChatRoom(userDetail.getId(), createAIChatRoomRequest);
+        return ApiResponse.createSuccess("커스텀 AI 챗봇이 생성되었습니다.");
+    }
+
+    /**
+     * [사용자 ↔ 챗봇]
+     */
+    @Operation(summary = "사용자-챗봇간 채팅방 목록 조회", description = "유저의 사용자-챗봇간 채팅방의 목록을 조회합니다.")
+    @GetMapping("/ai-rooms")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<AIChatRoomsResponse> getAllAIChatRooms(
+        @AuthenticationPrincipal CustomUserDetails userDetail
+    ) {
+        List<AIChatRoomResponse> aiChatRooms = chatService.getAIChatRooms(userDetail.getId());
+        return ApiResponse.createSuccessWithData(new AIChatRoomsResponse(aiChatRooms));
+    }
+
+    /**
+     * [사용자 ↔ 사용자]
+     */
     @Operation(summary = "특정 상대와의 채팅방 조회/생성", description = "기존 채팅방이 있으면 해당 채팅방 ID를, 없으면 생성 후 ID 반환합니다.")
     @PostMapping("/rooms")
     @ApiResponses({
@@ -42,7 +79,24 @@ public class ChatRestController {
         return ApiResponse.createSuccessWithData(new ChatRoomIdResponse(chatRoom.getId()));
     }
 
+    /**
+     * [사용자 ↔ 사용자]
+     */
+    @Operation(summary = "사용자간 채팅방 목록 조회", description = "유저의 사용자간 채팅방의 목록을 조회합니다.")
+    @GetMapping("/user-rooms")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<ChatRoomsResponse> getAllUserChatRooms(
+        @AuthenticationPrincipal CustomUserDetails userDetail
+    ) {
+        List<ChatRoomResponse> userChatRooms = chatService.getUserChatRooms(userDetail.getId());
+        return ApiResponse.createSuccessWithData(new ChatRoomsResponse(userChatRooms));
+    }
 
+    /**
+     * [공통]
+     */
     @Operation(summary = "채팅방 메시지 목록 조회", description = "특정 채팅방의 메시지 목록을 조회합니다.")
     @GetMapping("/{chatRoomId}/messages")
     @ApiResponses({
@@ -53,18 +107,10 @@ public class ChatRestController {
         return ApiResponse.createSuccessWithData(new ChatContentsResponse(chatContentResponses));
     }
 
-    @Operation(summary = "채팅방 목록 조회", description = "유저의 채팅방의 목록을 조회합니다.")
-    @GetMapping("/rooms")
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
-    })
-    public ApiResponse<ChatRoomsResponse> getAllChatRooms(
-        @AuthenticationPrincipal CustomUserDetails userDetail
-    ) {
-        List<ChatRoomResponse> chatRoomResponses = chatService.getChatRooms(userDetail.getId());
-        return ApiResponse.createSuccessWithData(new ChatRoomsResponse(chatRoomResponses));
-    }
 
+    /**
+     * [공통]
+     */
     @Operation(summary = "채팅방의 상대방 보낸 메시지 모두 읽음 처리", description = "상대방이 보낸 메시지를 모두 읽음 처리합니다.")
     @PostMapping("/{chatRoomId}/all/read")
     @ApiResponses({
@@ -78,6 +124,9 @@ public class ChatRestController {
         return ApiResponse.createSuccess("상대방 메시지 모두 읽음 처리 완료");
     }
 
+    /**
+     * [공통]
+     */
     @Operation(summary = "채팅방의 상대방 보낸 특정 메시지 읽음 처리", description = "상대방이 보낸 특정 메시지를 읽음 처리합니다.")
     @PostMapping("/{chatRoomId}/{chatId}/read")
     @ApiResponses({

@@ -1,5 +1,6 @@
 package com.example.soop.domain.chat.repository;
 
+import com.example.soop.domain.chat.RoomType;
 import com.example.soop.domain.chat.entity.ChatRoom;
 import java.util.List;
 import java.util.Optional;
@@ -36,5 +37,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
         "WHERE m.user.id = :userId " +
         "ORDER BY cr.messageUpdatedAt DESC")
     List<ChatRoom> findAllByUserIdOrderByMessageUpdatedAtDesc(@Param("userId") Long userId);
+
+    /**
+     * 룸 타입별 사용자 채팅방 목록 조회
+     */
+    List<ChatRoom> findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(Long userId, RoomType roomType);
 
 }

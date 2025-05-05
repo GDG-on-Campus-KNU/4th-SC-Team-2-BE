@@ -1,6 +1,8 @@
 package com.example.soop.domain.chat;
 
 import com.example.soop.domain.chat.dto.req.ChatRoomIdRequest;
+import com.example.soop.domain.chat.dto.req.CreateAIChatRoomRequest;
+import com.example.soop.domain.chat.dto.res.AIChatRoomResponse;
 import com.example.soop.domain.chat.dto.res.ChatContentResponse;
 import com.example.soop.domain.chat.dto.res.ChatRoomResponse;
 import com.example.soop.domain.chat.entity.Chat;
@@ -8,6 +10,8 @@ import com.example.soop.domain.chat.entity.ChatRoom;
 import com.example.soop.domain.chat.entity.Membership;
 import com.example.soop.domain.chat.entity.RoomStatus;
 import com.example.soop.domain.chat.repository.ChatRepository;
+import com.example.soop.domain.chat.entity.ChatRoomInfo;
+import com.example.soop.domain.chat.repository.ChatRoomInfoRepository;
 import com.example.soop.domain.chat.repository.ChatRoomRepository;
 import com.example.soop.domain.chat.repository.MemberShipRepository;
 import com.example.soop.domain.user.User;
@@ -31,6 +35,7 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomInfoRepository chatRoomInfoRepository;
     private final MemberShipRepository memberShipRepository;
     private final UserRepository userRepository;
 
@@ -72,6 +77,38 @@ public class ChatService {
     }
 
     /**
+     * AI 챗봇 채팅방 생성
+     */
+    @Transactional
+    public ChatRoom createAIChatRoom(Long userId, CreateAIChatRoomRequest request) {
+        // 1. ChatRoom 생성
+        ChatRoom newChatRoom = new ChatRoom();
+        newChatRoom.setTitle(request.name());
+        newChatRoom.setStatus(RoomStatus.ENABLED);
+        newChatRoom.setRoomType(RoomType.USER_TO_BOT);
+        newChatRoom.setMessageUpdatedAt(LocalDateTime.now());
+
+        ChatRoom savedChatRoom = chatRoomRepository.save(newChatRoom);
+
+        // 2. ChatRoomInfo 저장
+        ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
+            .chatRoom(savedChatRoom)
+            .name(request.name())
+            .description(request.description())
+            .empathyLevel(request.empathyLevel())
+            .tone(request.tone())
+            .build();
+        chatRoomInfoRepository.save(chatRoomInfo);
+
+        // 3. Membership 추가 (생성한 사용자만 추가)
+        if (!isUserInChatRoom(userId, savedChatRoom.getId())) {
+            addUserToChatRoom(userId, savedChatRoom.getId());
+        }
+
+        return savedChatRoom;
+    }
+
+    /**
      * 채팅방의 채팅 목록 조회
      */
     public List<ChatContentResponse> getChatsByRoomId(Long chatRoomId) {
@@ -90,49 +127,67 @@ public class ChatService {
 
 
     /**
-     * 유저의 모든 채팅방 조회
+     * 사용자-사용자간 채팅방 조회
      */
-    public List<ChatRoomResponse> getChatRooms(Long userId) {
-        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserIdOrderByMessageUpdatedAtDesc(userId);
+    public List<ChatRoomResponse> getUserChatRooms(Long userId) {
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(
+            userId, RoomType.USER_TO_EXPERT);
 
-        List<ChatRoomResponse> chatRoomResponses = new ArrayList<>();
+        List<ChatRoomResponse> responses = new ArrayList<>();
         for (ChatRoom chatRoom : chatRooms) {
-            // MongoDB에서 최신 채팅 1개만 가져오기
-            Optional<Chat> latestChatOptional = chatRepository.findTopByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId());
+            Optional<Chat> latestChat = chatRepository.findTopByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId());
 
-            String latestChatContent = "대화 기록이 없습니다."; // 기본값
-            if (latestChatOptional.isPresent()) {
-                latestChatContent = latestChatOptional.get().getContent();
-            }
+            String latestContent = latestChat.map(Chat::getContent).orElse("대화 기록이 없습니다.");
 
-            // RDB에서 나 제외한 멤버십 조회
-            List<Membership> memberships = memberShipRepository.findMembershipsByChatRoomIdAndExcludeUser(
-                chatRoom.getId(), userId
-            );
-
-            if (memberships.isEmpty()) {
-                log.info("해당 채팅방의 참여 유저(membership) 이 존재하지 않습니다.");
-                continue;
-            }
+            // 상대방 찾기
+            List<Membership> memberships = memberShipRepository.findMembershipsByChatRoomIdAndExcludeUser(chatRoom.getId(), userId);
+            if (memberships.isEmpty()) continue;
 
             User targetUser = memberships.get(0).getUser();
 
-            ChatRoomResponse response = new ChatRoomResponse(
+            responses.add(new ChatRoomResponse(
                 chatRoom.getId(),
                 targetUser.getId(),
                 targetUser.getEmail(),
                 targetUser.getNickname(),
                 chatRoom.getTitle(),
-                latestChatContent,
+                latestContent,
                 checkIsNew(chatRoom.getId(), userId),
                 chatRoom.getStatus()
-            );
-
-            chatRoomResponses.add(response);
+            ));
         }
-
-        return chatRoomResponses;
+        return responses;
     }
+
+    /**
+     * 사용자-챗봇간 `채팅방 조회
+     */
+    public List<AIChatRoomResponse> getAIChatRooms(Long userId) {
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(
+            userId, RoomType.USER_TO_BOT);
+
+        List<AIChatRoomResponse> responses = new ArrayList<>();
+        for (ChatRoom chatRoom : chatRooms) {
+            Optional<Chat> latestChat = chatRepository.findTopByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId());
+            String latestContent = latestChat.map(Chat::getContent).orElse("대화 기록이 없습니다.");
+
+            // AIChatRoomInfo 가져오기
+            ChatRoomInfo info = chatRoomInfoRepository.findByChatRoomId(chatRoom.getId())
+                .orElseThrow(() -> new RuntimeException("AIChatRoomInfo not found"));
+
+            responses.add(new AIChatRoomResponse(
+                chatRoom.getId(),
+                info.getName(),
+                info.getDescription(),
+                info.getEmpathyLevel(),
+                info.getTone(),
+                latestContent,
+                chatRoom.getStatus()
+            ));
+        }
+        return responses;
+    }
+
 
 
 
@@ -233,4 +288,5 @@ public class ChatService {
         // MongoDB는 .getContent()가 필요 없음
         return chatRepository.findByChatRoomIdOrderByCreatedAtDesc(chatRoomId, PageRequest.of(0, limit));
     }
+
 }
