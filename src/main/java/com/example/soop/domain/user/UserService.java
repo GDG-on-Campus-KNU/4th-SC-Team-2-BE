@@ -2,6 +2,7 @@ package com.example.soop.domain.user;
 
 import com.example.soop.domain.user.req.LoginRequest;
 import com.example.soop.domain.user.req.SignupRequest;
+import com.example.soop.domain.user.res.UserResponse;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.UserException;
 import com.example.soop.global.jwt.JwtProvider;
@@ -46,4 +47,9 @@ public class UserService {
         return new TokenResponse(accessToken, refreshToken);
     }
 
+    public UserResponse getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+        return UserResponse.fromEntity(user);
+    }
 }

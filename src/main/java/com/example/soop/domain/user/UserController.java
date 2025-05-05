@@ -3,12 +3,15 @@ package com.example.soop.domain.user;
 import com.example.soop.domain.user.req.LoginRequest;
 import com.example.soop.domain.user.req.SignupRequest;
 import com.example.soop.domain.user.res.RefreshTokenResponse;
+import com.example.soop.domain.user.res.UserResponse;
 import com.example.soop.global.format.ApiResponse;
 import com.example.soop.global.jwt.JwtProvider;
 import com.example.soop.global.jwt.TokenResponse;
+import com.example.soop.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -43,8 +46,8 @@ public class UserController {
         return ApiResponse.createSuccessWithData(tokenResponse, "로그인에 성공했습니다.");
     }
 
-    @PostMapping("/refresh")
     @Operation(summary = "엑세스 토큰 재발급")
+    @PostMapping("/refresh")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REFRESH401", description = "리프레시 토큰이 DB에 존재하지 않습니다."),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "REFRESH402", description = "해당 유저에 등록된 리프레시과 일치하지 않습니다."),
@@ -56,6 +59,18 @@ public class UserController {
         RefreshTokenResponse refreshTokenResponse = jwtProvider.recreateAccessToken(refreshToken);
         return ApiResponse.createSuccessWithData(refreshTokenResponse,
             "엑세스 토큰이 재발급 되었습니다.");
+    }
+
+    @Operation(summary = "내 정보 조회")
+    @PostMapping("/me")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "USER402", description = "존재하지 않는 유저입니다."),
+    })
+    public ApiResponse<UserResponse> getMyInfo(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        UserResponse userResponse = userService.getUserInfo(userDetails.getId());
+        return ApiResponse.createSuccessWithData(userResponse,"내 정보 조회에 성공했습니다.");
     }
 
 }

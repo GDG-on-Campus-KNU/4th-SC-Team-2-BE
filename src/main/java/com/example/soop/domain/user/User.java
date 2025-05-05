@@ -1,5 +1,4 @@
 package com.example.soop.domain.user;
-
 import com.example.soop.global.entity.JpaBaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
