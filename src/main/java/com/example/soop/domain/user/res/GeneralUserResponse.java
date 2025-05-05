@@ -2,15 +2,15 @@ package com.example.soop.domain.user.res;
 
 import com.example.soop.domain.user.User;
 
-public record UserResponse(
+public record GeneralUserResponse(
     Long id,
     String providerId,
     String email,
     String nickName
 ) {
 
-    public static UserResponse fromEntity(User user) {
-        return new UserResponse(
+    public static GeneralUserResponse fromEntity(User user) {
+        return new GeneralUserResponse(
             user.getId(),
             user.getProviderId(),
             user.getEmail(),

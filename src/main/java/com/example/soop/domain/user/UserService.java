@@ -6,12 +6,17 @@ import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.domain.user.req.ExpertSignupRequest;
 import com.example.soop.domain.user.req.LoginRequest;
 import com.example.soop.domain.user.req.GeneralSignupRequest;
-import com.example.soop.domain.user.res.UserResponse;
+import com.example.soop.domain.user.res.ExpertUserResponse;
+import com.example.soop.domain.user.res.GeneralUserResponse;
+import com.example.soop.domain.user.type.Category;
+import com.example.soop.domain.user.type.Language;
+import com.example.soop.domain.user.type.Style;
 import com.example.soop.global.code.ErrorCode;
 import com.example.soop.global.exception.UserException;
 import com.example.soop.global.jwt.JwtProvider;
 import com.example.soop.global.jwt.TokenResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +51,7 @@ public class UserService {
         profile.setUser(user);
         profile.setCategory(request.category());
         profile.setExperience(request.experience());
-        profile.setStyle(request.style());
+        profile.setStyles(request.styles());
         profile.setLanguage(request.language());
         profile.setBio(request.bio());
         expertProfileRepository.save(profile);
@@ -70,9 +75,19 @@ public class UserService {
         return new TokenResponse(accessToken, refreshToken);
     }
 
-    public UserResponse getUserInfo(Long userId) {
+    @Transactional
+    public List<ExpertUserResponse> findExpertsByFilter(Category category, List<Style> styles, Language language, Integer minExperience) {
+        List<ExpertProfile> profiles = expertProfileRepository.findByFilters(category, styles, language, minExperience);
+
+        return profiles.stream()
+            .map(ep -> ExpertUserResponse.fromEntity(ep.getUser()))
+            .toList();
+    }
+
+
+    public GeneralUserResponse getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
-        return UserResponse.fromEntity(user);
+        return GeneralUserResponse.fromEntity(user);
     }
 }
