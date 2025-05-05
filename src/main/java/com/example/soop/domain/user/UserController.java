@@ -92,11 +92,11 @@ public class UserController {
     @GetMapping("/experts")
     public ApiResponse<List<ExpertUserResponse>> getExperts(
         @RequestParam(required = false) Category category,
-        @RequestParam(required = false) Style style,
+        @RequestParam(required = false) List<Style> styles,
         @RequestParam(required = false) Language language,
         @RequestParam(required = false) Integer minExperience
     ) {
-        List<ExpertUserResponse> experts = userService.findExpertsByFilter(category, style, language, minExperience);
+        List<ExpertUserResponse> experts = userService.findExpertsByFilter(category, styles, language, minExperience);
         return ApiResponse.createSuccessWithData(experts, "전문가 목록 조회에 성공했습니다.");
     }
 
