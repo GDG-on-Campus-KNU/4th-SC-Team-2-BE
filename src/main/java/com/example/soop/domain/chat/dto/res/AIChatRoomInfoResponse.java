@@ -8,7 +8,8 @@ public record AIChatRoomInfoResponse(
     String name,
     String description,
     EmpathyLevel empathyLevel,
-    ToneLevel tone
+    ToneLevel tone,
+    int image
 ) {
 
 }

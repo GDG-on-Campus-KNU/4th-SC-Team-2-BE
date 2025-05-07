@@ -119,7 +119,8 @@ public class ChatService {
                 info.getName(),
                 info.getDescription(),
                 info.getEmpathyLevel(),
-                info.getTone()
+                info.getTone(),
+                0
             ))
             .toList();
     }
