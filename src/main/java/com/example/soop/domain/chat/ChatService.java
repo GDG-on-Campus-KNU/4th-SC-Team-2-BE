@@ -168,6 +168,7 @@ public class ChatService {
                 targetUser.getNickname(),
                 chatRoom.getTitle(),
                 latestContent,
+                chatRoom.getMessageUpdatedAt(),
                 checkIsNew(chatRoom.getId(), userId),
                 chatRoom.getStatus()
             ));
@@ -176,7 +177,7 @@ public class ChatService {
     }
 
     /**
-     * 사용자-챗봇간 `채팅방 조회
+     * 사용자-챗봇간 채팅방 조회
      */
     public List<AIChatRoomResponse> getAIChatRooms(Long userId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserIdAndRoomTypeOrderByMessageUpdatedAtDesc(
@@ -197,6 +198,7 @@ public class ChatService {
                 chatRoomInfo.getEmpathyLevel(),
                 chatRoomInfo.getTone(),
                 latestContent,
+                chatRoom.getMessageUpdatedAt(),
                 chatRoom.getStatus()
             ));
         }
