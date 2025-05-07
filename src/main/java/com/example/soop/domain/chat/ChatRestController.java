@@ -38,7 +38,7 @@ public class ChatRestController {
      * [사용자 ↔ 챗봇]
      */
     @Operation(summary = "AI 챗봇 생성", description = "AI 챗봇 정의 정보를 생성합니다.")
-    @PostMapping("/ai-bots")
+    @PostMapping("/bots")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
@@ -54,7 +54,7 @@ public class ChatRestController {
      * [사용자 ↔ 챗봇]
      */
     @Operation(summary = "사용자 AI 챗봇 리스트 조회", description = "사용자가 생성한 AI 챗봇 목록을 조회합니다.")
-    @GetMapping("/ai-bots")
+    @GetMapping("/bots")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
@@ -83,7 +83,7 @@ public class ChatRestController {
      * [사용자 ↔ 챗봇]
      */
     @Operation(summary = "사용자-챗봇간 채팅방 목록 조회", description = "유저의 사용자-챗봇간 채팅방의 목록을 조회합니다.")
-    @GetMapping("/ai-rooms")
+    @GetMapping("/rooms/ai")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
@@ -98,7 +98,7 @@ public class ChatRestController {
      * [사용자 ↔ 사용자]
      */
     @Operation(summary = "특정 상대와의 채팅방 조회/생성", description = "기존 채팅방이 있으면 해당 채팅방 ID를, 없으면 생성 후 ID 반환합니다.")
-    @PostMapping("/rooms")
+    @PostMapping("/rooms/users")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
@@ -114,7 +114,7 @@ public class ChatRestController {
      * [사용자 ↔ 사용자]
      */
     @Operation(summary = "사용자간 채팅방 목록 조회", description = "유저의 사용자간 채팅방의 목록을 조회합니다.")
-    @GetMapping("/user-rooms")
+    @GetMapping("/rooms/users")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
