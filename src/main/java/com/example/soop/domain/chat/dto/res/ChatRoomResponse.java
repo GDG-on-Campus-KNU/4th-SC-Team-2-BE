@@ -12,7 +12,8 @@ public record ChatRoomResponse(
     String latestContent, // 가장 최근 대화
     LocalDateTime messageUpdatedAt,
     Boolean isNew, // 내가 읽지 않은 새 대화 있는지 여부
-    RoomStatus status
+    RoomStatus status,
+    int image
 ) {
 
 }

@@ -13,5 +13,6 @@ public record AIChatRoomResponse(
     ToneLevel tone,
     String latestMessage,
     LocalDateTime messageUpdatedAt,
-    RoomStatus roomStatus
+    RoomStatus roomStatus,
+    int image
 ) {}

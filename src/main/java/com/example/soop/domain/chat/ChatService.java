@@ -170,7 +170,8 @@ public class ChatService {
                 latestContent,
                 chatRoom.getMessageUpdatedAt(),
                 checkIsNew(chatRoom.getId(), userId),
-                chatRoom.getStatus()
+                chatRoom.getStatus(),
+                0
             ));
         }
         return responses;
@@ -199,7 +200,8 @@ public class ChatService {
                 chatRoomInfo.getTone(),
                 latestContent,
                 chatRoom.getMessageUpdatedAt(),
-                chatRoom.getStatus()
+                chatRoom.getStatus(),
+                0
             ));
         }
         return responses;
