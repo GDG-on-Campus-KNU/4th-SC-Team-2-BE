@@ -2,6 +2,8 @@ package com.example.soop.domain.chat;
 
 import com.example.soop.domain.chat.dto.req.ChatRoomIdRequest;
 import com.example.soop.domain.chat.dto.req.CreateAIChatRoomRequest;
+import com.example.soop.domain.chat.dto.req.CreateChatRoomInfoRequest;
+import com.example.soop.domain.chat.dto.res.AIChatRoomInfoResponse;
 import com.example.soop.domain.chat.dto.res.AIChatRoomResponse;
 import com.example.soop.domain.chat.dto.res.ChatContentResponse;
 import com.example.soop.domain.chat.dto.res.ChatRoomResponse;
@@ -79,35 +81,47 @@ public class ChatService {
     }
 
     /**
-     * AI 챗봇 채팅방 생성
+     * AI 챗봇 "채팅방" 생성 (미리 생성되어 있는 AI 챗봇 ID 사옹)
      */
     @Transactional
     public ChatRoom createAIChatRoom(Long userId, CreateAIChatRoomRequest request) {
-        // 1. ChatRoom 생성
-        ChatRoom newChatRoom = new ChatRoom();
-        newChatRoom.setTitle(request.name());
-        newChatRoom.setStatus(RoomStatus.ENABLED);
-        newChatRoom.setRoomType(RoomType.USER_TO_BOT);
-        newChatRoom.setMessageUpdatedAt(LocalDateTime.now());
+        // 1. 챗봇 정보 가져오기
+        ChatRoomInfo chatRoomInfo = chatRoomInfoRepository.findById(request.chatRoomInfoId())
+            .orElseThrow(() -> new RuntimeException("챗봇 정보 없음"));
 
-        ChatRoom savedChatRoom = chatRoomRepository.save(newChatRoom);
-
-        // 2. ChatRoomInfo 저장
-        ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
-            .chatRoom(savedChatRoom)
-            .name(request.name())
-            .description(request.description())
-            .empathyLevel(request.empathyLevel())
-            .tone(request.tone())
+        // 2. 채팅방 생성
+        ChatRoom newChatRoom = ChatRoom.builder()
+            .title(chatRoomInfo.getName() + "와의 대화방") // 예시
+            .status(RoomStatus.ENABLED)
+            .roomType(RoomType.USER_TO_BOT)
+            .messageUpdatedAt(LocalDateTime.now())
+            .chatRoomInfo(chatRoomInfo) // ✅ FK 연결
             .build();
-        chatRoomInfoRepository.save(chatRoomInfo);
 
-        // 3. Membership 추가 (생성한 사용자만 추가)
-        if (!isUserInChatRoom(userId, savedChatRoom.getId())) {
-            addUserToChatRoom(userId, savedChatRoom.getId());
+        chatRoomRepository.save(newChatRoom);
+
+        // 3. 사용자 membership 추가
+        if (!isUserInChatRoom(userId, newChatRoom.getId())) {
+            addUserToChatRoom(userId, newChatRoom.getId());
         }
 
-        return savedChatRoom;
+        return newChatRoom;
+    }
+
+    /**
+     * 사용자별 AI 챗봇 목록 조회
+     */
+    public List<AIChatRoomInfoResponse> getUserChatBots(Long userId) {
+        List<ChatRoomInfo> chatBots = chatRoomInfoRepository.findAllByUserId(userId);
+        return chatBots.stream()
+            .map(info -> new AIChatRoomInfoResponse(
+                info.getId(),
+                info.getName(),
+                info.getDescription(),
+                info.getEmpathyLevel(),
+                info.getTone()
+            ))
+            .toList();
     }
 
     /**
@@ -174,15 +188,14 @@ public class ChatService {
             String latestContent = latestChat.map(Chat::getContent).orElse("대화 기록이 없습니다.");
 
             // AIChatRoomInfo 가져오기
-            ChatRoomInfo info = chatRoomInfoRepository.findByChatRoomId(chatRoom.getId())
-                .orElseThrow(() -> new RuntimeException("AIChatRoomInfo not found"));
+            ChatRoomInfo chatRoomInfo = chatRoom.getChatRoomInfo();
 
             responses.add(new AIChatRoomResponse(
                 chatRoom.getId(),
-                info.getName(),
-                info.getDescription(),
-                info.getEmpathyLevel(),
-                info.getTone(),
+                chatRoomInfo.getName(),
+                chatRoomInfo.getDescription(),
+                chatRoomInfo.getEmpathyLevel(),
+                chatRoomInfo.getTone(),
                 latestContent,
                 chatRoom.getStatus()
             ));
@@ -292,42 +305,46 @@ public class ChatService {
     }
 
     @Transactional
-    public void createDefaultChatRooms(User user) {
-        createChatBotRoom(user, "Empathica", "A chatbot that listens deeply and provides warm, empathetic responses to help you feel understood.",
+    public void createDefaultChatBotInfos(User user) {
+        createChatBotInfo(user, "Empathica", "A chatbot that listens deeply and provides warm, empathetic responses to help you feel understood.",
             EmpathyLevel.EMPATHETIC_CARING, ToneLevel.CALM_SOFT);
 
-        createChatBotRoom(user, "RationalMind", "A chatbot that gives logical, objective, and practical advice to help you solve problems.",
+        createChatBotInfo(user, "RationalMind", "A chatbot that gives logical, objective, and practical advice to help you solve problems.",
             EmpathyLevel.COOL_RATIONAL, ToneLevel.DIRECT_HONEST);
 
-        createChatBotRoom(user, "MotivaBot", "A chatbot that encourages and motivates you with friendly, uplifting messages.",
+        createChatBotInfo(user, "MotivaBot", "A chatbot that encourages and motivates you with friendly, uplifting messages.",
             EmpathyLevel.WARM_UNDERSTANDING, ToneLevel.CASUAL_FRIENDLY);
     }
 
-    private void createChatBotRoom(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel) {
-        // 1. ChatRoom 생성
-        ChatRoom chatRoom = ChatRoom.builder()
-            .title(name)
-            .roomType(RoomType.USER_TO_BOT)
-            .status(RoomStatus.ENABLED)
-            .build();
-        chatRoomRepository.save(chatRoom);
-
-        // 2. ChatRoomInfo 생성 및 연결
+    private void createChatBotInfo(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel) {
         ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
-            .chatRoom(chatRoom)
+            .user(user) // ✅ 사용자 연결 (추가 필드 필요함!)
             .name(name)
             .description(description)
             .empathyLevel(empathyLevel)
             .tone(toneLevel)
             .build();
-        chatRoomInfoRepository.save(chatRoomInfo);
 
-        // 3. Membership 추가 (본인이 멤버로 포함되도록)
-        Membership membership = Membership.builder()
-            .chatRoom(chatRoom)
-            .user(user)
-            .build();
-        memberShipRepository.save(membership);
+        chatRoomInfoRepository.save(chatRoomInfo);
     }
 
+    @Transactional
+    public ChatRoomInfo createChatRoomInfo(Long userId, CreateChatRoomInfoRequest request) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+        ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
+            .user(user)
+            .name(request.name())
+            .description(request.description())
+            .empathyLevel(request.empathyLevel())
+            .tone(request.tone())
+            .build();
+
+        return chatRoomInfoRepository.save(chatRoomInfo);
+    }
+
+    public ChatRoom getChatRoomById(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).get();
+        return chatRoom;
+    }
 }

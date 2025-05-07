@@ -2,6 +2,8 @@ package com.example.soop.domain.chat;
 
 import com.example.soop.domain.chat.dto.req.ChatRoomIdRequest;
 import com.example.soop.domain.chat.dto.req.CreateAIChatRoomRequest;
+import com.example.soop.domain.chat.dto.req.CreateChatRoomInfoRequest;
+import com.example.soop.domain.chat.dto.res.AIChatRoomInfoResponse;
 import com.example.soop.domain.chat.dto.res.AIChatRoomResponse;
 import com.example.soop.domain.chat.dto.res.AIChatRoomsResponse;
 import com.example.soop.domain.chat.dto.res.ChatContentResponse;
@@ -35,17 +37,46 @@ public class ChatRestController {
     /**
      * [사용자 ↔ 챗봇]
      */
+    @Operation(summary = "AI 챗봇 생성", description = "AI 챗봇 정의 정보를 생성합니다.")
+    @PostMapping("/ai-bots")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<String> createChatRoomInfo(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @RequestBody CreateChatRoomInfoRequest request
+    ) {
+        chatService.createChatRoomInfo(userDetails.getId(), request);
+        return ApiResponse.createSuccess("AI 챗봇 정보가 생성되었습니다.");
+    }
+
+    /**
+     * [사용자 ↔ 챗봇]
+     */
+    @Operation(summary = "사용자 AI 챗봇 리스트 조회", description = "사용자가 생성한 AI 챗봇 목록을 조회합니다.")
+    @GetMapping("/ai-bots")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<List<AIChatRoomInfoResponse>> getUserChatBots(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        List<AIChatRoomInfoResponse> chatBots = chatService.getUserChatBots(userDetail.getId());
+        return ApiResponse.createSuccessWithData(chatBots);
+    }
+
+    /**
+     * [사용자 ↔ 챗봇]
+     */
     @Operation(summary = "AI 챗봇 채팅방 생성", description = "사용자가 정의한 AI 챗봇의 특징에 따라 채팅방을 생성합니다.")
     @PostMapping("/rooms/ai")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
     public ApiResponse<String> createAIChatRoom(
-        @Valid @RequestBody CreateAIChatRoomRequest createAIChatRoomRequest,
+        @Valid @RequestBody CreateAIChatRoomRequest request,
         @AuthenticationPrincipal CustomUserDetails userDetail
     ) {
-        chatService.createAIChatRoom(userDetail.getId(), createAIChatRoomRequest);
-        return ApiResponse.createSuccess("커스텀 AI 챗봇이 생성되었습니다.");
+        chatService.createAIChatRoom(userDetail.getId(), request);
+        return ApiResponse.createSuccess("AI 챗봇 채팅방이 생성되었습니다.");
     }
 
     /**

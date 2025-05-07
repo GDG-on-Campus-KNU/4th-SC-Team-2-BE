@@ -42,7 +42,7 @@ public class UserService {
         }
         User user = new User(request.providerId(), request.email(), request.nickname(), UserType.USER);
         userRepository.save(user);
-        chatService.createDefaultChatRooms(user);
+        chatService.createDefaultChatBotInfos(user);
     }
 
     @Transactional

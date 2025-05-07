@@ -3,6 +3,8 @@ package com.example.soop.global.util;
 import com.example.soop.domain.chat.ChatService;
 import com.example.soop.domain.chat.dto.res.ChatContentResponse;
 import com.example.soop.domain.chat.entity.Chat;
+import com.example.soop.domain.chat.entity.ChatRoom;
+import com.example.soop.domain.chat.entity.ChatRoomInfo;
 import com.example.soop.global.redis.RedisPublisher;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -48,8 +50,11 @@ public class AIService {
     public void generateAndPublishResponseAsync(Long chatRoomId, String userMessage,
         List<Map<String, String>> conversationHistory) {
         try {
+            ChatRoom chatRoom = chatService.getChatRoomById(chatRoomId);
+            ChatRoomInfo chatRoomInfo = chatRoom.getChatRoomInfo();
+
             // ✅ 1. OpenAI 호출
-            String aiResponse = callOpenAi(userMessage, conversationHistory);
+            String aiResponse = callOpenAi(userMessage, conversationHistory, chatRoomInfo);
 
             // ✅ 2. GPT 답변 저장
             Chat botChat = Chat.builder()
@@ -78,8 +83,8 @@ public class AIService {
     /**
      * 실제 OpenAI API 호출 부분
      */
-    public String callOpenAi(String userMessage, List<Map<String, String>> conversationHistory) {
-        List<Map<String, String>> messages = prepareMessages(userMessage, conversationHistory);
+    public String callOpenAi(String userMessage, List<Map<String, String>> conversationHistory, ChatRoomInfo chatRoomInfo) {
+        List<Map<String, String>> messages = prepareMessages(userMessage, conversationHistory, chatRoomInfo);
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", DEFAULT_MODEL);
@@ -125,21 +130,29 @@ public class AIService {
      * 대화 이력을 포함한 메시지 준비
      */
     private List<Map<String, String>> prepareMessages(String userMessage,
-        List<Map<String, String>> conversationHistory) {
+        List<Map<String, String>> conversationHistory, ChatRoomInfo chatRoomInfo) {
         List<Map<String, String>> messages = new ArrayList<>();
 
-        // 시스템 메시지 설정 (선택사항)
+        // ✅ system 메시지: chatRoomInfo 기반 생성
+        String systemPrompt = String.format(
+            "당신은 '%s'라는 AI 챗봇입니다. 설명: %s. 공감 레벨: %s. 톤: %s. 이 특성에 맞게 답변하세요.",
+            chatRoomInfo.getName(),
+            chatRoomInfo.getDescription(),
+            chatRoomInfo.getEmpathyLevel(),
+            chatRoomInfo.getTone()
+        );
+
         Map<String, String> systemMessage = new HashMap<>();
         systemMessage.put("role", "system");
-        systemMessage.put("content", "당신은 도움이 되고 친절한 AI 어시스턴트입니다.");
+        systemMessage.put("content", systemPrompt);
         messages.add(systemMessage);
 
-        // 기존 대화 이력 추가
+        // ✅ 기존 대화 이력
         if (conversationHistory != null && !conversationHistory.isEmpty()) {
             messages.addAll(conversationHistory);
         }
 
-        // 현재 사용자 메시지 추가
+        // ✅ 사용자 메시지
         Map<String, String> userMessageMap = new HashMap<>();
         userMessageMap.put("role", "user");
         userMessageMap.put("content", userMessage);

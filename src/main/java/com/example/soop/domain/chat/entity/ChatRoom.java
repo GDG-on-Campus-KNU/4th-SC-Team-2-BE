@@ -10,6 +10,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -52,7 +54,8 @@ public class ChatRoom extends JpaBaseEntity {
     @Builder.Default
     private List<Membership> memberships = new ArrayList<>();
 
-    @OneToOne(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne
+    @JoinColumn(name = "chat_room_info_id", nullable = false)
     private ChatRoomInfo chatRoomInfo;
 
     // 가장 최근 메시지 도착 시간 업데이트
