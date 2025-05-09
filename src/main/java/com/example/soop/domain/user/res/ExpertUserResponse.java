@@ -18,7 +18,8 @@ public record ExpertUserResponse(
     int experience,
     List<Style> styles,
     Language language,
-    String bio
+    String bio,
+    int image
 ) {
     public static ExpertUserResponse fromEntity(User user) {
         ExpertProfile profile = user.getExpertProfile();
@@ -32,7 +33,8 @@ public record ExpertUserResponse(
             profile.getExperience(),
             profile.getStyles(),
             profile.getLanguage(),
-            profile.getBio()
+            profile.getBio(),
+            0
         );
     }
 }
