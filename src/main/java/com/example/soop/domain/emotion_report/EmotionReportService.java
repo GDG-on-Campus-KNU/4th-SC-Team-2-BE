@@ -29,6 +29,10 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.example.soop.domain.emotion_log.dto.PositiveCountPerDay;
+import com.example.soop.domain.emotion_report.res.PositivityBlockResponse;
+import com.example.soop.domain.emotion_log.res.PositivitySummaryResponse;
+import java.util.Comparator;
 
 @EnableRetry
 @Service
@@ -38,10 +42,10 @@ public class EmotionReportService {
     private final EmotionLogRepository emotionLogRepository;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate = new RestTemplate();  // HTTP 호출용
-    @Value("${gemini.api-url}")
+    //@Value("${gemini.api-url}")
     private String geminiApiUrlBase;
 
-    @Value("${gemini.api-key}")
+    @Value("${google.api-key}")
     private String geminiApiKey;
 
     @Description("일별 분석 보고서 조회")
@@ -49,12 +53,67 @@ public class EmotionReportService {
         return getReport(userId, date, date.plusDays(1));
     }
 
+    @Description("최근 긍정 트리거 중 가장 많이 등장한 항목을 반환")
+    public TriggerResult getMostPositiveTrigger(Long userId, LocalDate startDate, LocalDate endDate) {
+        AiTriggersAndFeedbackResult aiResult = generateTriggersAndStrategies(userId, startDate, endDate);
+        return aiResult.positiveTriggers().stream()
+                .max(Comparator.comparingInt(TriggerResult::count))
+                .orElse(new TriggerResult("None", 0));
+    }
+
+
     @Description("주별 분석 보고서 조회")
     public EmotionReportResponse getWeeklyReport(Long userId, LocalDate dateInWeek) {
         LocalDate start = dateInWeek.with(DayOfWeek.MONDAY);
         LocalDate end = start.plusDays(7);
         return getReport(userId, start, end);
     }
+
+    @Description("최근 7일간 긍정 감정 블록 및 증가율 계산")
+    public PositivitySummaryResponse getWeeklyPositivitySummary(Long userId) {
+        User user = findUser(userId);
+        LocalDate today = LocalDate.now();
+
+        // 이번 주 기간
+        LocalDate start = today.minusDays(6);
+        LocalDate end = today.plusDays(1);
+
+        // 지난 주 기간
+        LocalDate prevStart = start.minusDays(7);
+        LocalDate prevEnd = start;
+
+        // 이번 주 긍정 감정 개수
+        List<PositiveCountPerDay> thisWeekCounts = emotionLogRepository.countPositiveByDay(
+                user, start.atStartOfDay(), end.atStartOfDay());
+
+        // 지난 주 긍정 감정 개수
+        List<PositiveCountPerDay> lastWeekCounts = emotionLogRepository.countPositiveByDay(
+                user, prevStart.atStartOfDay(), prevEnd.atStartOfDay());
+
+        int thisWeekTotal = thisWeekCounts.stream().mapToInt(c -> c.getCount().intValue()).sum();
+        int lastWeekTotal = lastWeekCounts.stream().mapToInt(c -> c.getCount().intValue()).sum();
+
+        int increaseRate = (lastWeekTotal == 0 && thisWeekTotal > 0)
+                ? 100
+                : (lastWeekTotal == 0)
+                ? 0
+                : (int) Math.round(((thisWeekTotal - lastWeekTotal) / (double) lastWeekTotal) * 100);
+
+        Map<LocalDate, Long> countMap = thisWeekCounts.stream()
+                .collect(Collectors.toMap(PositiveCountPerDay::getDay, PositiveCountPerDay::getCount));
+
+        List<PositivityBlockResponse> blocks = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = start.plusDays(i);
+            int count = countMap.getOrDefault(date, 0L).intValue();
+            int block = (count >= 5) ? 3 : (count >= 3) ? 2 : (count >= 1 ? 1 : 0);
+            String day = date.getDayOfWeek().toString().substring(0, 3);
+            blocks.add(new PositivityBlockResponse(day, count, block));
+        }
+
+        return new PositivitySummaryResponse(increaseRate, blocks);
+    }
+
 
     @Description("월별 분석 보고서 조회")
     public EmotionReportResponse getMonthlyReport(Long userId, LocalDate dateInMonth) {

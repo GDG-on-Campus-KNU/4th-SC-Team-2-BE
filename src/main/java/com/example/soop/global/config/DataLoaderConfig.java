@@ -7,81 +7,82 @@ import com.example.soop.domain.user.User;
 import com.example.soop.domain.user.UserType;
 import com.example.soop.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.Map;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.*;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Configuration
 public class DataLoaderConfig {
 
-    private static final List<String> EMOTION_NAMES = List.of("Joy", "Sadness", "Annoyance", "Calm", "Depression", "Gratitude", "Anxiety", "Happiness", "Lethargy", "Excitement");
+    private static final List<String> EMOTION_NAMES = List.of(
+            "Joy", "Sadness", "Annoyance", "Calm", "Depression",
+            "Gratitude", "Anxiety", "Happiness", "Lethargy", "Excitement"
+    );
     private static final Random random = new Random();
 
     private static final Map<String, EmotionData> CONTENT_TO_EMOTION = Map.ofEntries(
-        Map.entry("I got scolded by my boss at work today and felt angry.", new EmotionData("Anger", EmotionGroup.NEGATIVE)),
-        Map.entry("I had dinner with a friend after a long time and felt happy.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt stressed because of studying for an exam.", new EmotionData("Stress", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt sad watching the rain outside the window.", new EmotionData("Sadness", EmotionGroup.NEGATIVE)),
-        Map.entry("I messed up my presentation during a meeting and felt embarrassed.", new EmotionData("Embarrassment", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt happy while walking my dog and seeing its cute behavior.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("Someone gave up their seat for me on the bus and I felt grateful.", new EmotionData("Gratitude", EmotionGroup.POSITIVE)),
-        Map.entry("I felt proud after being praised in class.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
-        Map.entry("I was annoyed because I was late to work due to traffic.", new EmotionData("Annoyance", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt heavy-hearted after fighting with a friend.", new EmotionData("Sadness", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt proud for sticking to my workout routine lately.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
-        Map.entry("I felt exhausted and powerless due to work overload.", new EmotionData("Lethargy", EmotionGroup.NEGATIVE)),
-        Map.entry("The sunny weather made me feel refreshed.", new EmotionData("Calm", EmotionGroup.POSITIVE)),
-        Map.entry("I felt happy spending time with my family at the movies.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("It was payday, but I felt bitter because it all went into savings.", new EmotionData("Bitterness", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt intimidated watching my classmate's presentation.", new EmotionData("Intimidation", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt left out at a group gathering.", new EmotionData("Loneliness", EmotionGroup.NEGATIVE)),
-        Map.entry("I enjoyed some peaceful alone time at a café.", new EmotionData("Calm", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt happy when a cat approached me and let me pet it.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt disappointed in my friend over a small issue.", new EmotionData("Disappointment", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt a sense of accomplishment after finishing the project.", new EmotionData("Accomplishment", EmotionGroup.POSITIVE)),
-        Map.entry("I was glad to bond with my teammates at the company workshop.", new EmotionData("Connection", EmotionGroup.POSITIVE)),
-        Map.entry("I felt regretful after fighting with my partner.", new EmotionData("Regret", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt sentimental looking at the stars in the night sky.", new EmotionData("Sentimental", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt empty because nothing happened all day.", new EmotionData("Emptiness", EmotionGroup.NEUTRAL)),
-        Map.entry("I spilled coffee on my way to work and felt bad all day.", new EmotionData("Annoyance", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt touched congratulating a friend at their wedding.", new EmotionData("Joy", EmotionGroup.POSITIVE)),
-        Map.entry("I felt good after being praised by my boss.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
-        Map.entry("I blamed myself for making a mistake while rushing a task.", new EmotionData("Guilt", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt happy seeing a cute dog while walking down the street.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt excited planning a trip for the weekend.", new EmotionData("Excitement", EmotionGroup.POSITIVE)),
-        Map.entry("I felt nervous after getting an unexpected interview call.", new EmotionData("Nervousness", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt frustrated waiting at the bank because of delays.", new EmotionData("Frustration", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt happy talking with a senior I admire.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt motivated after attending a self-development lecture.", new EmotionData("Motivation", EmotionGroup.POSITIVE)),
-        Map.entry("I felt anxious realizing I left my phone at home.", new EmotionData("Anxiety", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt amazed becoming friends quickly with a stranger.", new EmotionData("Surprise", EmotionGroup.POSITIVE)),
-        Map.entry("I felt happy succeeding in losing weight at the gym.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt joyful when my family enjoyed the food I cooked.", new EmotionData("Joy", EmotionGroup.POSITIVE)),
-        Map.entry("I felt disappointed when my dinner plans were canceled.", new EmotionData("Disappointment", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt grateful when a coworker helped me finish my work.", new EmotionData("Gratitude", EmotionGroup.POSITIVE)),
-        Map.entry("I felt moved watching a street performance.", new EmotionData("Moved", EmotionGroup.POSITIVE)),
-        Map.entry("I felt nostalgic organizing old photos.", new EmotionData("Nostalgia", EmotionGroup.NEUTRAL)),
-        Map.entry("I enjoyed relaxing with a cup of coffee on a rainy day.", new EmotionData("Calm", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt discouraged after receiving a job rejection.", new EmotionData("Discouragement", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt relieved after getting good results from a medical checkup.", new EmotionData("Relief", EmotionGroup.POSITIVE)),
-        Map.entry("I was angry because my package was lost.", new EmotionData("Anger", EmotionGroup.NEGATIVE)),
-        Map.entry("I felt happy spending a warm time with my family gathering.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
-        Map.entry("I felt focused reading a book on the subway.", new EmotionData("Focus", EmotionGroup.NEUTRAL)),
-        Map.entry("I felt delighted discovering a new hobby.", new EmotionData("Delight", EmotionGroup.POSITIVE))
+            Map.entry("I got scolded by my boss at work today and felt angry.", new EmotionData("Anger", EmotionGroup.NEGATIVE)),
+            Map.entry("I had dinner with a friend after a long time and felt happy.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt stressed because of studying for an exam.", new EmotionData("Stress", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt sad watching the rain outside the window.", new EmotionData("Sadness", EmotionGroup.NEGATIVE)),
+            Map.entry("I messed up my presentation during a meeting and felt embarrassed.", new EmotionData("Embarrassment", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt happy while walking my dog and seeing its cute behavior.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("Someone gave up their seat for me on the bus and I felt grateful.", new EmotionData("Gratitude", EmotionGroup.POSITIVE)),
+            Map.entry("I felt proud after being praised in class.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
+            Map.entry("I was annoyed because I was late to work due to traffic.", new EmotionData("Annoyance", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt heavy-hearted after fighting with a friend.", new EmotionData("Sadness", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt proud for sticking to my workout routine lately.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
+            Map.entry("I felt exhausted and powerless due to work overload.", new EmotionData("Lethargy", EmotionGroup.NEGATIVE)),
+            Map.entry("The sunny weather made me feel refreshed.", new EmotionData("Calm", EmotionGroup.POSITIVE)),
+            Map.entry("I felt happy spending time with my family at the movies.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("It was payday, but I felt bitter because it all went into savings.", new EmotionData("Bitterness", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt intimidated watching my classmate's presentation.", new EmotionData("Intimidation", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt left out at a group gathering.", new EmotionData("Loneliness", EmotionGroup.NEGATIVE)),
+            Map.entry("I enjoyed some peaceful alone time at a café.", new EmotionData("Calm", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt happy when a cat approached me and let me pet it.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt disappointed in my friend over a small issue.", new EmotionData("Disappointment", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt a sense of accomplishment after finishing the project.", new EmotionData("Accomplishment", EmotionGroup.POSITIVE)),
+            Map.entry("I was glad to bond with my teammates at the company workshop.", new EmotionData("Connection", EmotionGroup.POSITIVE)),
+            Map.entry("I felt regretful after fighting with my partner.", new EmotionData("Regret", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt sentimental looking at the stars in the night sky.", new EmotionData("Sentimental", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt empty because nothing happened all day.", new EmotionData("Emptiness", EmotionGroup.NEUTRAL)),
+            Map.entry("I spilled coffee on my way to work and felt bad all day.", new EmotionData("Annoyance", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt touched congratulating a friend at their wedding.", new EmotionData("Joy", EmotionGroup.POSITIVE)),
+            Map.entry("I felt good after being praised by my boss.", new EmotionData("Pride", EmotionGroup.POSITIVE)),
+            Map.entry("I blamed myself for making a mistake while rushing a task.", new EmotionData("Guilt", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt happy seeing a cute dog while walking down the street.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt excited planning a trip for the weekend.", new EmotionData("Excitement", EmotionGroup.POSITIVE)),
+            Map.entry("I felt nervous after getting an unexpected interview call.", new EmotionData("Nervousness", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt frustrated waiting at the bank because of delays.", new EmotionData("Frustration", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt happy talking with a senior I admire.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt motivated after attending a self-development lecture.", new EmotionData("Motivation", EmotionGroup.POSITIVE)),
+            Map.entry("I felt anxious realizing I left my phone at home.", new EmotionData("Anxiety", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt amazed becoming friends quickly with a stranger.", new EmotionData("Surprise", EmotionGroup.POSITIVE)),
+            Map.entry("I felt happy succeeding in losing weight at the gym.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt joyful when my family enjoyed the food I cooked.", new EmotionData("Joy", EmotionGroup.POSITIVE)),
+            Map.entry("I felt disappointed when my dinner plans were canceled.", new EmotionData("Disappointment", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt grateful when a coworker helped me finish my work.", new EmotionData("Gratitude", EmotionGroup.POSITIVE)),
+            Map.entry("I felt moved watching a street performance.", new EmotionData("Moved", EmotionGroup.POSITIVE)),
+            Map.entry("I felt nostalgic organizing old photos.", new EmotionData("Nostalgia", EmotionGroup.NEUTRAL)),
+            Map.entry("I enjoyed relaxing with a cup of coffee on a rainy day.", new EmotionData("Calm", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt discouraged after receiving a job rejection.", new EmotionData("Discouragement", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt relieved after getting good results from a medical checkup.", new EmotionData("Relief", EmotionGroup.POSITIVE)),
+            Map.entry("I was angry because my package was lost.", new EmotionData("Anger", EmotionGroup.NEGATIVE)),
+            Map.entry("I felt happy spending a warm time with my family gathering.", new EmotionData("Happiness", EmotionGroup.POSITIVE)),
+            Map.entry("I felt focused reading a book on the subway.", new EmotionData("Focus", EmotionGroup.NEUTRAL)),
+            Map.entry("I felt delighted discovering a new hobby.", new EmotionData("Delight", EmotionGroup.POSITIVE))
     );
 
     @Bean
     @Transactional
     public ApplicationRunner dataLoader(UserRepository userRepository, EmotionLogRepository emotionLogRepository) {
         return args -> {
-            User user = new User("google-sub-001", "user1@example.com", "유저1", UserType.USER);
-            userRepository.save(user);
+            String email = "user1@example.com";
+            User user = userRepository.findByEmail(email)
+                    .orElseGet(() -> userRepository.save(new User("google-sub-001", email, "유저1", UserType.USER)));
 
             LocalDate monday = LocalDate.now().with(DayOfWeek.MONDAY);
             for (int i = 0; i < 4; i++) {
@@ -102,5 +103,6 @@ public class DataLoaderConfig {
             System.out.println("✅ 테스트용 다양한 감정 로그 (의미 있는 emotionGroup 포함) 생성 완료");
         };
     }
+
     public record EmotionData(String emotionName, EmotionGroup emotionGroup) {}
 }

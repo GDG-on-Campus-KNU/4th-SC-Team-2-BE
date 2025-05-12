@@ -5,9 +5,28 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import com.example.soop.domain.emotion_log.dto.PositiveCountPerDay;
 
 @Repository
 public interface EmotionLogRepository extends JpaRepository<EmotionLog, Long> {
+    @Query("""
+    SELECT DATE(e.recordedAt) AS day, COUNT(e) AS count
+    FROM EmotionLog e
+    WHERE e.user = :user
+      AND e.emotionGroup = 'POSITIVE'
+      AND e.recordedAt >= :start
+      AND e.recordedAt < :end
+    GROUP BY DATE(e.recordedAt)
+    ORDER BY DATE(e.recordedAt)
+""")
+    List<PositiveCountPerDay> countPositiveByDay(
+            @Param("user") User user,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
 
     List<EmotionLog> findAllByUserAndRecordedAtBetweenOrderByRecordedAtAsc(User user,
         LocalDateTime start, LocalDateTime end);

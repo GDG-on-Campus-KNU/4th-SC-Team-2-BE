@@ -26,6 +26,9 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
+# Google 인증 키 숨기기
+src/main/resources/secret/*.json
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -45,3 +48,6 @@ caches/
 daemon/
 native/
 wrapper/
+
+# 폴더 내의 파일 무시
+src/main/resources/

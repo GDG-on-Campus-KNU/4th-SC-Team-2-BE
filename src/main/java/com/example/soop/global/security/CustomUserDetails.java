@@ -17,12 +17,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return null; // 권한이 필요하다면 여기에 Role 추가
     }
 
     @Override
     public String getPassword() {
-        return "";
+        return ""; // 사용자 비밀번호 사용 시 수정
     }
 
     @Override
@@ -34,4 +34,23 @@ public class CustomUserDetails implements UserDetails {
         return user.getId();
     }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

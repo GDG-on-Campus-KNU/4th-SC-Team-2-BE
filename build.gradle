@@ -21,6 +21,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/releases/' }
 }
 
 dependencies {
@@ -65,6 +66,22 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // ✅ LangChain4j + Vertex AI Gemini
+    implementation 'dev.langchain4j:langchain4j:1.0.0-beta3'
+    implementation 'dev.langchain4j:langchain4j-vertex-ai:1.0.0-beta3'
+    implementation 'dev.langchain4j:langchain4j-vertex-ai-gemini:1.0.0-beta3'
+
+
+// ✅ Vertex AI Embedding API
+    implementation 'com.google.cloud:google-cloud-aiplatform:3.37.0'
+
+// ✅ pgvector (PostgreSQL)
+    implementation 'org.postgresql:postgresql:42.6.0'
+
+// ✅ HTML 크롤링
+    implementation 'org.jsoup:jsoup:1.17.2'
+
 
 }
 

@@ -8,6 +8,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ChatRepository extends MongoRepository<Chat, String> {
 
+    List<Chat> findTop10ByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId);
+
+
     List<Chat> findAllByChatRoomIdOrderByCreatedAtAsc(Long chatRoomId);
 
     List<Chat> findAllByChatRoomIdOrderByCreatedAtDesc(Long chatRoomId);

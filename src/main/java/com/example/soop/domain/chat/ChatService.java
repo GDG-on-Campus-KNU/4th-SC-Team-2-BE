@@ -1,5 +1,8 @@
 package com.example.soop.domain.chat;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.example.soop.domain.chat.dto.req.ChatRoomIdRequest;
 import com.example.soop.domain.chat.dto.req.CreateAIChatRoomRequest;
 import com.example.soop.domain.chat.dto.req.CreateChatRoomInfoRequest;
@@ -352,4 +355,23 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).get();
         return chatRoom;
     }
+
+    /**
+     * Gemini 프롬프트 생성을 위한 최근 채팅 기록 반환
+     */
+    public List<Map<String, String>> getRecentChatHistory(Long chatRoomId) {
+        List<Chat> chatList = chatRepository.findTop10ByChatRoomIdOrderByCreatedAtDesc(chatRoomId);
+
+        // 최신순으로 가져온 것을 오래된 순으로 정렬
+        Collections.reverse(chatList);
+
+        return chatList.stream()
+                .map(chat -> Map.of(
+                        "role", chat.getSenderId() == 0L ? "model" : "user",
+                        "content", chat.getContent()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
 }
