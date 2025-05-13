@@ -312,22 +312,23 @@ public class ChatService {
     @Transactional
     public void createDefaultChatBotInfos(User user) {
         createChatBotInfo(user, "Empathica", "A chatbot that listens deeply and provides warm, empathetic responses to help you feel understood.",
-            EmpathyLevel.EMPATHETIC_CARING, ToneLevel.CALM_SOFT);
+            EmpathyLevel.EMPATHETIC_CARING, ToneLevel.CALM_SOFT, 0);
 
         createChatBotInfo(user, "RationalMind", "A chatbot that gives logical, objective, and practical advice to help you solve problems.",
-            EmpathyLevel.COOL_RATIONAL, ToneLevel.DIRECT_HONEST);
+            EmpathyLevel.COOL_RATIONAL, ToneLevel.DIRECT_HONEST, 1);
 
         createChatBotInfo(user, "MotivaBot", "A chatbot that encourages and motivates you with friendly, uplifting messages.",
-            EmpathyLevel.WARM_UNDERSTANDING, ToneLevel.CASUAL_FRIENDLY);
+            EmpathyLevel.WARM_UNDERSTANDING, ToneLevel.CASUAL_FRIENDLY, 2);
     }
 
-    private void createChatBotInfo(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel) {
+    private void createChatBotInfo(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel, int image) {
         ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
             .user(user) // ✅ 사용자 연결 (추가 필드 필요함!)
             .name(name)
             .description(description)
             .empathyLevel(empathyLevel)
             .tone(toneLevel)
+            .image(image)
             .build();
 
         chatRoomInfoRepository.save(chatRoomInfo);
