@@ -7,7 +7,8 @@ public record UpdateEmotionLogRequest(
     String emotionName,
     EmotionGroup emotionGroup,
     String content,
-    LocalDateTime recordedAt
+    LocalDateTime recordedAt,
+    int image
 ) {
 
 }

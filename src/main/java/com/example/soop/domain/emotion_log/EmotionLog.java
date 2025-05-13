@@ -33,20 +33,24 @@ public class EmotionLog {
 
     private LocalDateTime recordedAt = LocalDateTime.now();
 
+    private int image;
+
     public EmotionLog(User user, String emotionName, EmotionGroup emotionGroup, String content,
-        LocalDateTime recordedAt) {
+        LocalDateTime recordedAt, int image) {
         this.user = user;
         this.emotionName = emotionName;
         this.emotionGroup = emotionGroup;
         this.content = content;
         this.recordedAt = recordedAt;
+        this.image = image;
     }
 
     public void update(String emotionName, EmotionGroup emotionGroup, String content,
-        LocalDateTime recordedAt) {
+        LocalDateTime recordedAt,int image) {
         this.emotionName = emotionName;
         this.emotionGroup = emotionGroup;
         this.content = content;
         this.recordedAt = recordedAt;
+        this.image = image;
     }
 }

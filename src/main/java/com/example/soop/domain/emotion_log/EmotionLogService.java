@@ -38,7 +38,7 @@ public class EmotionLogService {
     public EmotionLog createEmotionLog(Long userId, CreateEmotionLogRequest request) {
         User user = findUser(userId);
         EmotionLog emotionLog = new EmotionLog(user, request.emotionName(), request.emotionGroup(),
-            request.content(), request.recordedAt());
+            request.content(), request.recordedAt(), request.image());
         return emotionLogRepository.save(emotionLog);
     }
 
@@ -58,7 +58,7 @@ public class EmotionLogService {
             .orElseThrow(() -> new EmotionLogException(ErrorCode.EMOTION_NOT_FOUND));
         emotionLog.update(updateEmotionLogRequest.emotionName(),
             updateEmotionLogRequest.emotionGroup(), updateEmotionLogRequest.content(),
-            updateEmotionLogRequest.recordedAt());
+            updateEmotionLogRequest.recordedAt(), updateEmotionLogRequest.image());
     }
 
     @Description("감정 기록 개별 조회")

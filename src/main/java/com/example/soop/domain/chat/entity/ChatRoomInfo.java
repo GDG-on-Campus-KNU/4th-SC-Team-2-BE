@@ -49,4 +49,6 @@ public class ChatRoomInfo {
 
     @Enumerated(EnumType.STRING)
     private ToneLevel tone;
+
+    private int image;
 }

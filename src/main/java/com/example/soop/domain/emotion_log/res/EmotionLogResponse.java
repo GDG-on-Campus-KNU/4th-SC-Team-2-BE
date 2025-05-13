@@ -8,7 +8,8 @@ public record EmotionLogResponse(
     String emotionName,
     EmotionGroup emotionGroup,
     String content,
-    LocalDateTime recordedAt
+    LocalDateTime recordedAt,
+    int image
 ) {
 
     public static EmotionLogResponse fromEntity(EmotionLog emotionLog) {
@@ -16,7 +17,8 @@ public record EmotionLogResponse(
             emotionLog.getEmotionName(),
             emotionLog.getEmotionGroup(),
             emotionLog.getContent(),
-            emotionLog.getRecordedAt()
+            emotionLog.getRecordedAt(),
+            emotionLog.getImage()
         );
     }
 }

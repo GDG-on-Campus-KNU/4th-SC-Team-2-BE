@@ -202,7 +202,7 @@ public class ChatService {
                 latestContent,
                 chatRoom.getMessageUpdatedAt(),
                 chatRoom.getStatus(),
-                0
+                chatRoomInfo.getImage()
             ));
         }
         return responses;
@@ -343,6 +343,7 @@ public class ChatService {
             .description(request.description())
             .empathyLevel(request.empathyLevel())
             .tone(request.tone())
+            .image(request.image())
             .build();
 
         return chatRoomInfoRepository.save(chatRoomInfo);
