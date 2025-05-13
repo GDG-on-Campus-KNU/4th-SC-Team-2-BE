@@ -27,6 +27,7 @@ public class ChatStompController {
 
     @MessageMapping("/chat")
     public void handleChat(Message<?> message, ChatRequest chatRequest) {
+        log.info("✅ handleChat 진입, chatRoomId: {}, content: {}", chatRequest.chatRoomId(), chatRequest.content());
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         Long userId = (Long) accessor.getSessionAttributes().get("userId");
         Long chatRoomId = chatRequest.chatRoomId();
@@ -41,10 +42,11 @@ public class ChatStompController {
 
         // 3. RoomType 별 처리
         if (roomType == RoomType.USER_TO_BOT) {
+            log.info("✅ USER_TO_BOT 확인 완료, Gemini 호출 준비");
             // 대화 이력 가져오기 (최근 N개 메시지)
             List<Map<String, String>> conversationHistory = getConversationHistory(chatRoomId);
 
-            // GPT 응답은 "비동기"로 처리 - 개선된 버전 호출
+            // Gemini 응답은 "비동기"로 처리 - 개선된 버전 호출
             AIService.generateAndPublishResponseAsync(chatRoomId, chatRequest.content(), conversationHistory);
 
             // 스트리밍 응답을 사용하고 싶은 경우 아래 코드 사용
