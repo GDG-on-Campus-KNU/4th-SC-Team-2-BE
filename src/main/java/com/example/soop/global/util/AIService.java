@@ -35,9 +35,16 @@ public class AIService {
     private final RedisPublisher redisPublisher;
     private final WebClient webClient;
     private final SearchService searchService;
+    private final WebClient.Builder webClientBuilder;
 
     @Value("${openai.api.key}")
     private String openAiApiKey;
+
+    @Value("${gemini.api-url}")
+    private String apiUrl;
+
+    @Value("${gemini.api-key}")
+    private String apiKey;
 
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";
     private static final String DEFAULT_MODEL = "gpt-4o"; // Latest model as of April 2025
@@ -89,6 +96,7 @@ public class AIService {
         log.info("📡 Gemini API 호출 시작...");
         // 신뢰 자료 수집 (본문 포함)
         List<Map<String, String>> searchResults = searchService.searchAndCrawlTop2WithBody(userMessage);
+        log.info("searchResults: {}", searchResults);
         List<Map<String, String>> messages = prepareMessagesGeminiAI(userMessage, conversationHistory, chatRoomInfo, searchResults);
 
         String prompt = messages.stream()
@@ -190,7 +198,7 @@ public class AIService {
 
         String systemPrompt = String.format(
             "당신은 '%s'라는 AI 챗봇입니다. 설명: %s. 공감 레벨: %s. 톤: %s.\n\n" +
-                "아래는 신뢰할 수 있는 참고 자료입니다. 반드시 이 자료를 바탕으로 답변을 구성하세요:\n\n%s",
+                "아래는 신뢰할 수 있는 참고 자료입니다. 반드시 이 자료를 바탕으로 답변을 구성하고, 출처는 ~ 에 따르면 이라고 맨앞에 추가하세요.:\n\n%s",
             chatRoomInfo.getName(),
             chatRoomInfo.getDescription(),
             chatRoomInfo.getEmpathyLevel(),

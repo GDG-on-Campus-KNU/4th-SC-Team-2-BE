@@ -97,7 +97,7 @@ public class ChatRestController {
     /**
      * [사용자 ↔ 챗봇]
      */
-    @Operation(summary = "사용자-챗봇간 특정 채팅방 조회", description = "유저의 사용자-챗봇간 특정 채팅방 목록을 조회합니다.")
+    @Operation(summary = "사용자-챗봇간 특정 채팅방 조회", description = "유저의 사용자-챗봇간 특정 채팅방을 조회합니다.")
     @GetMapping("/rooms/ai/{roomId}")
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
