@@ -380,4 +380,26 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).get();
         return chatRoom;
     }
+
+    public AIChatRoomResponse getAIChatRoom(Long roomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId).get();
+        Optional<Chat> latestChat = chatRepository.findTopByChatRoomIdOrderByCreatedAtDesc(chatRoom.getId());
+        String latestContent = latestChat.map(Chat::getContent).orElse("대화 기록이 없습니다.");
+
+        // AIChatRoomInfo 가져오기
+        ChatRoomInfo chatRoomInfo = chatRoom.getChatRoomInfo();
+
+        AIChatRoomResponse response = new AIChatRoomResponse(
+            chatRoom.getId(),
+            chatRoomInfo.getName(),
+            chatRoomInfo.getDescription(),
+            chatRoomInfo.getEmpathyLevel(),
+            chatRoomInfo.getTone(),
+            latestContent,
+            chatRoom.getMessageUpdatedAt(),
+            chatRoom.getStatus(),
+            chatRoomInfo.getImage()
+        );
+        return response;
+    }
 }

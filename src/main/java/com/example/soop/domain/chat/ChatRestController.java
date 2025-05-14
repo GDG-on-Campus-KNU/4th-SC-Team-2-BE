@@ -95,6 +95,23 @@ public class ChatRestController {
     }
 
     /**
+     * [사용자 ↔ 챗봇]
+     */
+    @Operation(summary = "사용자-챗봇간 특정 채팅방 조회", description = "유저의 사용자-챗봇간 특정 채팅방 목록을 조회합니다.")
+    @GetMapping("/rooms/ai/{roomId}")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
+    })
+    public ApiResponse<AIChatRoomResponse> getAIChatRoom(
+        @AuthenticationPrincipal CustomUserDetails userDetail,
+        @PathVariable("roomId") Long roomId
+    ) {
+        AIChatRoomResponse aiChatRoom = chatService.getAIChatRoom(roomId);
+        return ApiResponse.createSuccessWithData(aiChatRoom);
+    }
+
+
+    /**
      * [사용자 ↔ 사용자]
      */
     @Operation(summary = "특정 상대와의 채팅방 조회/생성", description = "기존 채팅방이 있으면 해당 채팅방 ID를, 없으면 생성 후 ID 반환합니다.")
