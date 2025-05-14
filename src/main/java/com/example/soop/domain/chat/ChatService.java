@@ -120,7 +120,7 @@ public class ChatService {
                 info.getDescription(),
                 info.getEmpathyLevel(),
                 info.getTone(),
-                0
+                info.getImage()
             ))
             .toList();
     }
