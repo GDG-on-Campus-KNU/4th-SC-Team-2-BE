@@ -94,7 +94,7 @@ public class DataLoaderConfig {
                     String content = contents.get(random.nextInt(contents.size()));
                     EmotionData data = CONTENT_TO_EMOTION.get(content);
 
-                    EmotionLog log = new EmotionLog(user, data.emotionName(), data.emotionGroup(), content, baseTime.plusHours(j));
+                    EmotionLog log = new EmotionLog(user, data.emotionName(), data.emotionGroup(), content, baseTime.plusHours(j), 0);
                     emotionLogRepository.save(log);
                 }
             }
