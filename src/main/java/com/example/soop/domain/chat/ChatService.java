@@ -313,14 +313,40 @@ public class ChatService {
     public void createDefaultChatBotInfos(User user) {
         createChatBotInfo(user, "Empathica", "A chatbot that listens deeply and provides warm, empathetic responses to help you feel understood.",
             EmpathyLevel.EMPATHETIC_CARING, ToneLevel.CALM_SOFT, 0);
-
+        createDefaultAIChatRoom(user.getId(), 1L);
         createChatBotInfo(user, "RationalMind", "A chatbot that gives logical, objective, and practical advice to help you solve problems.",
             EmpathyLevel.COOL_RATIONAL, ToneLevel.DIRECT_HONEST, 1);
+        createDefaultAIChatRoom(user.getId(), 2L);
 
         createChatBotInfo(user, "MotivaBot", "A chatbot that encourages and motivates you with friendly, uplifting messages.",
             EmpathyLevel.WARM_UNDERSTANDING, ToneLevel.CASUAL_FRIENDLY, 2);
+        createDefaultAIChatRoom(user.getId(), 3L);
+
     }
 
+    public ChatRoom createDefaultAIChatRoom(Long userId, Long chatRoomInfoId) {
+        // 1. 챗봇 정보 가져오기
+        ChatRoomInfo chatRoomInfo = chatRoomInfoRepository.findById(chatRoomInfoId)
+            .orElseThrow(() -> new RuntimeException("챗봇 정보 없음"));
+
+        // 2. 채팅방 생성
+        ChatRoom newChatRoom = ChatRoom.builder()
+            .title(chatRoomInfo.getName() + "와의 대화방") // 예시
+            .status(RoomStatus.ENABLED)
+            .roomType(RoomType.USER_TO_BOT)
+            .messageUpdatedAt(LocalDateTime.now())
+            .chatRoomInfo(chatRoomInfo) // ✅ FK 연결
+            .build();
+
+        chatRoomRepository.save(newChatRoom);
+
+        // 3. 사용자 membership 추가
+        if (!isUserInChatRoom(userId, newChatRoom.getId())) {
+            addUserToChatRoom(userId, newChatRoom.getId());
+        }
+
+        return newChatRoom;
+    }
     private void createChatBotInfo(User user, String name, String description, EmpathyLevel empathyLevel, ToneLevel toneLevel, int image) {
         ChatRoomInfo chatRoomInfo = ChatRoomInfo.builder()
             .user(user) // ✅ 사용자 연결 (추가 필드 필요함!)
