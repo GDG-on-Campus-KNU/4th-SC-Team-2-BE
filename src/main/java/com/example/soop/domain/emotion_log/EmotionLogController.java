@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +37,7 @@ public class EmotionLogController {
     @PostMapping
     public ApiResponse<String> createEmotionLog(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        CreateEmotionLogRequest createEmotionLogRequest) {
+        @RequestBody CreateEmotionLogRequest createEmotionLogRequest) {
         emotionLogService.createEmotionLog(userDetails.getId(), createEmotionLogRequest);
         return ApiResponse.createSuccess("감정이 기록되었습니다.");
     }
