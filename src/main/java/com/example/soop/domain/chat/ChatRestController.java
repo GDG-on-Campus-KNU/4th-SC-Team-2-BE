@@ -71,12 +71,13 @@ public class ChatRestController {
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "COMMON200", description = "OK, 성공")
     })
-    public ApiResponse<String> createAIChatRoom(
+    public ApiResponse<AIChatRoomInfoResponse> createAIChatRoom(
         @Valid @RequestBody CreateAIChatRoomRequest request,
         @AuthenticationPrincipal CustomUserDetails userDetail
     ) {
-        chatService.createAIChatRoom(userDetail.getId(), request);
-        return ApiResponse.createSuccess("AI 챗봇 채팅방이 생성되었습니다.");
+        AIChatRoomInfoResponse aiChatRoomInfoResponse = chatService.createAIChatRoom(userDetail.getId(),
+            request);
+        return ApiResponse.createSuccessWithData(aiChatRoomInfoResponse, "AI 챗봇 채팅방이 생성되었습니다.");
     }
 
     /**

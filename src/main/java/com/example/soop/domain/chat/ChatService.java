@@ -84,7 +84,7 @@ public class ChatService {
      * AI 챗봇 "채팅방" 생성 (미리 생성되어 있는 AI 챗봇 ID 사옹)
      */
     @Transactional
-    public ChatRoom createAIChatRoom(Long userId, CreateAIChatRoomRequest request) {
+    public AIChatRoomInfoResponse createAIChatRoom(Long userId, CreateAIChatRoomRequest request) {
         // 1. 챗봇 정보 가져오기
         ChatRoomInfo chatRoomInfo = chatRoomInfoRepository.findById(request.chatRoomInfoId())
             .orElseThrow(() -> new RuntimeException("챗봇 정보 없음"));
@@ -105,7 +105,11 @@ public class ChatService {
             addUserToChatRoom(userId, newChatRoom.getId());
         }
 
-        return newChatRoom;
+        AIChatRoomInfoResponse aiChatRoomInfoResponse = new AIChatRoomInfoResponse(
+            newChatRoom.getId(), chatRoomInfo.getName(),
+            chatRoomInfo.getDescription(), chatRoomInfo.getEmpathyLevel(), chatRoomInfo.getTone(),
+            chatRoomInfo.getImage());
+        return aiChatRoomInfoResponse;
     }
 
     /**
