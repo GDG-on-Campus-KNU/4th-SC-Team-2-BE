@@ -84,4 +84,25 @@ public class EmotionReportController {
         return ApiResponse.createSuccessWithData(aiFeedbackResult, "기간별 AI 트리거 및 전략 조회에 성공했습니다.");
     }
 
+    @Operation(summary = "최근 7일간 긍정 감정 블록 + 증가율 요약")
+    @GetMapping("/positivity-summary")
+    public ApiResponse<PositivitySummaryResponse> getPositivitySummary(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        PositivitySummaryResponse summary =
+                emotionReportService.getWeeklyPositivitySummary(userDetails.getId());
+        return ApiResponse.createSuccessWithData(summary, "긍정 감정 요약 조회에 성공했습니다.");
+    }
+
+    @Operation(summary = "최근 가장 많이 등장한 긍정 트리거 조회")
+    @GetMapping("/top-positive-trigger")
+    public ApiResponse<TriggerResult> getTopPositiveTrigger(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(6); // 최근 7일
+        TriggerResult result = emotionReportService.getMostPositiveTrigger(userDetails.getId(), start, today.plusDays(1));
+        return ApiResponse.createSuccessWithData(result, "최근 가장 자주 등장한 긍정 트리거 조회에 성공했습니다.");
+    }
+
 }
