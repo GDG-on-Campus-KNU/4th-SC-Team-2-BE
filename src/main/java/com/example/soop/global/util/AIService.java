@@ -62,10 +62,10 @@ public class AIService {
             ChatRoom chatRoom = chatService.getChatRoomById(chatRoomId);
             ChatRoomInfo chatRoomInfo = chatRoom.getChatRoomInfo();
 
-            // ✅ 1. OpenAI 호출
+            // ✅ 1. Gemini 호출
             String aiResponse = callGemini(userMessage, conversationHistory, chatRoomInfo);
 
-            // ✅ 2. GPT 답변 저장
+            // ✅ 2.  답변 저장
             Chat botChat = Chat.builder()
                 .chatRoomId(chatRoomId)
                 .senderId(0L) // 시스템 ID
