@@ -4,7 +4,8 @@ import java.time.LocalDate;
 
 public record DailyTopEmotionResponse(
     LocalDate date,
-    String topEmotionName
+    String topEmotionName,
+    int image
 ) {
 
 }

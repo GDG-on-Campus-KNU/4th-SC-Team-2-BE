@@ -137,15 +137,21 @@ public class EmotionLogService {
                 List<EmotionLog> logsOnDate = entry.getValue();
 
                 // 감정별로 개수 세기
-                String mostFrequentEmotion = logsOnDate.stream()
-                    .collect(
-                        Collectors.groupingBy(EmotionLog::getEmotionName, Collectors.counting()))
-                    .entrySet().stream()
-                    .max(Map.Entry.comparingByValue()) // 최빈 감정
-                    .map(Map.Entry::getKey)
-                    .orElse("NONE");
+                Map<String, List<EmotionLog>> groupedByEmotionName =
+                    logsOnDate.stream().collect(Collectors.groupingBy(EmotionLog::getEmotionName));
 
-                return new DailyTopEmotionResponse(date, mostFrequentEmotion);
+                Map.Entry<String, List<EmotionLog>> topEntry = groupedByEmotionName.entrySet().stream()
+                    .max(Comparator.comparing(entry2 -> entry2.getValue().size()))
+                    .orElse(null);
+
+                if (topEntry == null) {
+                    return new DailyTopEmotionResponse(date, "NONE", -1); // 감정 없음 처리
+                }
+
+                String topEmotionName = topEntry.getKey();
+                int image = topEntry.getValue().get(0).getImage(); // 같은 감정명이면 이미지 동일하다고 가정
+
+                return new DailyTopEmotionResponse(date, topEmotionName, image);
             })
             .sorted(Comparator.comparing(DailyTopEmotionResponse::date))
             .toList();
