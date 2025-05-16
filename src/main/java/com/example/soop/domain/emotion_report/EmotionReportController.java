@@ -16,6 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.soop.domain.emotion_report.res.PositivityBlockResponse;
+import java.util.List;
+import com.example.soop.domain.emotion_log.res.PositivitySummaryResponse;
+import com.example.soop.domain.emotion_report.EmotionReportService.TriggerResult;
 
 @Tag(name = "Emotion Report", description = "감정 분석 관련 API")
 @RestController
