@@ -1,10 +1,12 @@
 package com.example.soop.global.config;
 
+import com.example.soop.domain.chat.ChatService;
 import com.example.soop.domain.emotion_log.EmotionGroup;
 import com.example.soop.domain.emotion_log.EmotionLog;
 import com.example.soop.domain.emotion_log.EmotionLogRepository;
 import com.example.soop.domain.user.ExpertProfile;
 import com.example.soop.domain.user.User;
+import com.example.soop.domain.user.UserService;
 import com.example.soop.domain.user.UserType;
 import com.example.soop.domain.user.repository.ExpertProfileRepository;
 import com.example.soop.domain.user.repository.UserRepository;
@@ -28,6 +30,7 @@ import java.util.Random;
 public class DataLoaderConfig {
 
     private final ExpertProfileRepository expertProfileRepository;
+    private final ChatService chatService;
     private static final List<String> EMOTION_NAMES = List.of("Joy", "Sadness", "Annoyance", "Calm", "Depression", "Gratitude", "Anxiety", "Happiness", "Lethargy", "Excitement");
     private static final Random random = new Random();
 
@@ -90,6 +93,7 @@ public class DataLoaderConfig {
         return args -> {
             User user = new User("google-sub-001", "user1@example.com", "유저1", UserType.USER);
             userRepository.save(user);
+            chatService.createDefaultChatBotInfos(user);
 
             LocalDate monday = LocalDate.now().with(DayOfWeek.MONDAY);
             for (int i = 0; i < 4; i++) {
