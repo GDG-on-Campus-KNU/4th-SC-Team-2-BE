@@ -3,9 +3,13 @@ package com.example.soop.global.config;
 import com.example.soop.domain.emotion_log.EmotionGroup;
 import com.example.soop.domain.emotion_log.EmotionLog;
 import com.example.soop.domain.emotion_log.EmotionLogRepository;
+import com.example.soop.domain.user.ExpertProfile;
 import com.example.soop.domain.user.User;
 import com.example.soop.domain.user.UserType;
 import com.example.soop.domain.user.repository.UserRepository;
+import com.example.soop.domain.user.type.Category;
+import com.example.soop.domain.user.type.Language;
+import com.example.soop.domain.user.type.Style;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Map;
@@ -100,6 +104,36 @@ public class DataLoaderConfig {
             }
 
             System.out.println("✅ 테스트용 다양한 감정 로그 (의미 있는 emotionGroup 포함) 생성 완료");
+
+            // 전문가 User 저장
+            List<User> expertUsers = List.of(
+                new User("1001", "dr.emily.lee@example.com", "Dr.Emily", UserType.EXPERT),
+                new User("1002", "james.kim@example.com", "JamesK", UserType.EXPERT),
+                new User("1003", "anna.chan@example.com", "AnnaC", UserType.EXPERT),
+                new User("1004", "michael.park@example.com", "MikeP", UserType.EXPERT),
+                new User("1005", "suhyun.choi@example.com", "SuhyunC", UserType.EXPERT),
+                new User("1006", "kevin.liu@example.com", "KevL", UserType.EXPERT),
+                new User("1007", "haruka.tanaka@example.com", "HarukaT", UserType.EXPERT),
+                new User("1008", "lisa.jung@example.com", "LisaJ", UserType.EXPERT),
+                new User("1009", "daniel.mendoza@example.com", "DanielM", UserType.EXPERT),
+                new User("1010", "grace.yoon@example.com", "GraceY", UserType.EXPERT)
+            );
+            userRepository.saveAll(expertUsers);
+
+            // 전문가 프로필 저장
+            List<ExpertProfile> expertProfiles = List.of(
+                createExpertProfile(expertUsers.get(0), Category.DOCTOR, 12, List.of(Style.SUPPORTIVE, Style.DIRECT), Language.ENGLISH, "Specialized in cognitive behavioral therapy with over a decade of clinical experience."),
+                createExpertProfile(expertUsers.get(1), Category.COUNSELOR, 5, List.of(Style.FRIENDLY), Language.KOREAN, "경청과 공감을 바탕으로 하는 마음치유 상담사입니다."),
+                createExpertProfile(expertUsers.get(2), Category.PUBLIC_INSTITUTION, 8, List.of(Style.INSIGHTFUL, Style.SUPPORTIVE), Language.CHINESE, "以人本主义为核心，帮助来访者发现内在力量。"),
+                createExpertProfile(expertUsers.get(3), Category.DOCTOR, 10, List.of(Style.DIRECT, Style.INSIGHTFUL), Language.ENGLISH, "Licensed psychiatrist focused on trauma recovery and emotional regulation."),
+                createExpertProfile(expertUsers.get(4), Category.COUNSELOR, 3, List.of(Style.FRIENDLY, Style.SUPPORTIVE), Language.KOREAN, "내담자의 이야기를 진심으로 들어주는 따뜻한 상담을 지향합니다."),
+                createExpertProfile(expertUsers.get(5), Category.PUBLIC_INSTITUTION, 6, List.of(Style.INSIGHTFUL), Language.ENGLISH, "I help clients reframe negative thoughts and develop healthier habits."),
+                createExpertProfile(expertUsers.get(6), Category.COUNSELOR, 4, List.of(Style.FRIENDLY, Style.SUPPORTIVE), Language.JAPANESE, "クライアントの心に寄り添う対話を大切にしています。"),
+                createExpertProfile(expertUsers.get(7), Category.DOCTOR, 15, List.of(Style.DIRECT), Language.KOREAN, "정신의학 기반의 분석적 상담으로 실질적인 문제 해결을 돕습니다."),
+                createExpertProfile(expertUsers.get(8), Category.PUBLIC_INSTITUTION, 7, List.of(Style.INSIGHTFUL, Style.FRIENDLY), Language.SPANISH, "Experiencia en terapia familiar y manejo del estrés."),
+                createExpertProfile(expertUsers.get(9), Category.COUNSELOR, 2, List.of(Style.SUPPORTIVE), Language.ENGLISH, "I focus on creating a safe, welcoming space for young adults navigating change.")
+            );
+            expertProfileRepository.saveAll(expertProfiles);
         };
     }
     public record EmotionData(String emotionName, EmotionGroup emotionGroup) {}
