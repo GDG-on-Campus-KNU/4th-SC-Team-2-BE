@@ -6,6 +6,7 @@ import com.example.soop.domain.emotion_log.EmotionLogRepository;
 import com.example.soop.domain.user.ExpertProfile;
 import com.example.soop.domain.user.User;
 import com.example.soop.domain.user.UserType;
+import com.example.soop.domain.user.repository.ExpertProfileRepository;
 import com.example.soop.domain.user.repository.UserRepository;
 import com.example.soop.domain.user.type.Category;
 import com.example.soop.domain.user.type.Language;
@@ -13,6 +14,7 @@ import com.example.soop.domain.user.type.Style;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +24,10 @@ import java.util.List;
 import java.util.Random;
 
 @Configuration
+@RequiredArgsConstructor
 public class DataLoaderConfig {
 
+    private final ExpertProfileRepository expertProfileRepository;
     private static final List<String> EMOTION_NAMES = List.of("Joy", "Sadness", "Annoyance", "Calm", "Depression", "Gratitude", "Anxiety", "Happiness", "Lethargy", "Excitement");
     private static final Random random = new Random();
 
@@ -122,19 +126,38 @@ public class DataLoaderConfig {
 
             // 전문가 프로필 저장
             List<ExpertProfile> expertProfiles = List.of(
-                createExpertProfile(expertUsers.get(0), Category.DOCTOR, 12, List.of(Style.SUPPORTIVE, Style.DIRECT), Language.ENGLISH, "Specialized in cognitive behavioral therapy with over a decade of clinical experience."),
-                createExpertProfile(expertUsers.get(1), Category.COUNSELOR, 5, List.of(Style.FRIENDLY), Language.KOREAN, "경청과 공감을 바탕으로 하는 마음치유 상담사입니다."),
-                createExpertProfile(expertUsers.get(2), Category.PUBLIC_INSTITUTION, 8, List.of(Style.INSIGHTFUL, Style.SUPPORTIVE), Language.CHINESE, "以人本主义为核心，帮助来访者发现内在力量。"),
-                createExpertProfile(expertUsers.get(3), Category.DOCTOR, 10, List.of(Style.DIRECT, Style.INSIGHTFUL), Language.ENGLISH, "Licensed psychiatrist focused on trauma recovery and emotional regulation."),
-                createExpertProfile(expertUsers.get(4), Category.COUNSELOR, 3, List.of(Style.FRIENDLY, Style.SUPPORTIVE), Language.KOREAN, "내담자의 이야기를 진심으로 들어주는 따뜻한 상담을 지향합니다."),
-                createExpertProfile(expertUsers.get(5), Category.PUBLIC_INSTITUTION, 6, List.of(Style.INSIGHTFUL), Language.ENGLISH, "I help clients reframe negative thoughts and develop healthier habits."),
-                createExpertProfile(expertUsers.get(6), Category.COUNSELOR, 4, List.of(Style.FRIENDLY, Style.SUPPORTIVE), Language.JAPANESE, "クライアントの心に寄り添う対話を大切にしています。"),
-                createExpertProfile(expertUsers.get(7), Category.DOCTOR, 15, List.of(Style.DIRECT), Language.KOREAN, "정신의학 기반의 분석적 상담으로 실질적인 문제 해결을 돕습니다."),
-                createExpertProfile(expertUsers.get(8), Category.PUBLIC_INSTITUTION, 7, List.of(Style.INSIGHTFUL, Style.FRIENDLY), Language.SPANISH, "Experiencia en terapia familiar y manejo del estrés."),
-                createExpertProfile(expertUsers.get(9), Category.COUNSELOR, 2, List.of(Style.SUPPORTIVE), Language.ENGLISH, "I focus on creating a safe, welcoming space for young adults navigating change.")
+                createExpertProfile(expertUsers.get(0), Category.DOCTOR, 12, List.of(Style.SUPPORTIVE, Style.ANALYTICAL), Language.ENGLISH, "Specialized in cognitive behavioral therapy with over a decade of clinical experience."),
+                createExpertProfile(expertUsers.get(1), Category.COUNSELOR, 5, List.of(Style.SUPPORTIVE), Language.KOREAN, "경청과 공감을 바탕으로 하는 마음치유 상담사입니다."),
+                createExpertProfile(expertUsers.get(2), Category.PUBLIC_INSTITUTION, 8, List.of(Style.COGNITIVE, Style.SUPPORTIVE), Language.CHINESE, "以人本主义为核心，帮助来访者发现内在力量。"),
+                createExpertProfile(expertUsers.get(3), Category.DOCTOR, 10, List.of(Style.DIRECTIVE, Style.ANALYTICAL), Language.ENGLISH, "Licensed psychiatrist focused on trauma recovery and emotional regulation."),
+                createExpertProfile(expertUsers.get(4), Category.COUNSELOR, 3, List.of(Style.HOLISTIC, Style.SUPPORTIVE), Language.KOREAN, "내담자의 이야기를 진심으로 들어주는 따뜻한 상담을 지향합니다."),
+                createExpertProfile(expertUsers.get(5), Category.PUBLIC_INSTITUTION, 6, List.of(Style.COGNITIVE), Language.ENGLISH, "I help clients reframe negative thoughts and develop healthier habits."),
+                createExpertProfile(expertUsers.get(6), Category.COUNSELOR, 4, List.of(Style.HOLISTIC, Style.SUPPORTIVE), Language.JAPANESE, "クライアントの心に寄り添う対話を大切にしています。"),
+                createExpertProfile(expertUsers.get(7), Category.DOCTOR, 15, List.of(Style.DIRECTIVE), Language.KOREAN, "정신의학 기반의 분석적 상담으로 실질적인 문제 해결을 돕습니다."),
+                createExpertProfile(expertUsers.get(8), Category.PUBLIC_INSTITUTION, 7, List.of(Style.HOLISTIC, Style.COGNITIVE), Language.KOREAN, "Experiencia en terapia familiar y manejo del estrés."),
+                createExpertProfile(expertUsers.get(9), Category.COUNSELOR, 2, List.of(Style.MINDFULNESS_BASED), Language.ENGLISH, "I focus on creating a safe, welcoming space for young adults navigating change.")
             );
+
             expertProfileRepository.saveAll(expertProfiles);
         };
     }
     public record EmotionData(String emotionName, EmotionGroup emotionGroup) {}
+
+    private ExpertProfile createExpertProfile(
+        User user,
+        Category category,
+        int experience,
+        List<Style> styles,
+        Language language,
+        String bio
+    ) {
+        ExpertProfile profile = new ExpertProfile();
+        profile.setUser(user);
+        profile.setCategory(category);
+        profile.setExperience(experience);
+        profile.setStyles(styles);
+        profile.setLanguage(language);
+        profile.setBio(bio);
+        return profile;
+    }
 }
