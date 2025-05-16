@@ -198,7 +198,7 @@ public class AIService {
 
         String systemPrompt = String.format(
             "당신은 '%s'라는 AI 챗봇입니다. 설명: %s. 공감 레벨: %s. 톤: %s.\n\n" +
-                "아래는 신뢰할 수 있는 참고 자료입니다. 반드시 이 자료를 바탕으로 답변을 구성하고, 출처는 ~ 에 따르면 이라고 맨앞에 추가하세요.:\n\n%s",
+                "아래는 신뢰할 수 있는 참고 자료입니다. 반드시 이 자료를 바탕으로 답변을 구성하고, 출처(기관명)을 시작 부분에 명시하세요.:\n\n%s",
             chatRoomInfo.getName(),
             chatRoomInfo.getDescription(),
             chatRoomInfo.getEmpathyLevel(),
